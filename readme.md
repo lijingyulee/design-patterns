@@ -72,7 +72,7 @@
 
 1. 定义抽象类
 ```java
-public abstract class ICar {
+public abstract class AbstractCar {
 
     public void run() {
         System.out.println("汽车飞速行驶中...");
@@ -81,7 +81,7 @@ public abstract class ICar {
 ```
 2. 定义实现子类
 ```java
-public class Audi extends ICar {
+public class Audi extends AbstractCar {
     @Override
     public void run() {
         System.out.println("奥迪汽车飞速行驶中...");
@@ -90,7 +90,7 @@ public class Audi extends ICar {
 ```
 
 ```java
-public class BMW extends ICar {
+public class BMW extends AbstractCar {
 
     @Override
     public void run() {
@@ -106,7 +106,7 @@ public class CarFactory {
     private static final String CAR_TYPE_BMW = "bmw";
     private static final String CAR_TYPE_AUDI = "audi";
 
-    public static ICar getCar(String type) {
+    public static AbstractCar getCar(String type) {
         if (CAR_TYPE_BMW.equals(type)) {
             return new BMW();
         } else if (CAR_TYPE_AUDI.equals(type)) {
@@ -121,14 +121,15 @@ public class CarFactory {
 ```
 4. 测试类
 ```java
-public static void main(String[] args) {
+public class Demo1Test {
+    public static void main(String[] args) {
 
         // 得到具体的汽车--宝马
-        ICar bwm = CarFactory.getCar("bwm");
+        AbstractCar bwm = CarFactory.getCar("bwm");
         bwm.run();
 
         // 得到具体的汽车--奥迪
-        ICar audi = CarFactory.getCar("audi");
+        AbstractCar audi = CarFactory.getCar("audi");
         audi.run();
 
         /*
@@ -138,4 +139,5 @@ public static void main(String[] args) {
          */
 
     }
+}
 ```

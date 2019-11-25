@@ -10,7 +10,7 @@ public class CarFactory {
     private static final String CAR_TYPE_BMW = "bmw";
     private static final String CAR_TYPE_AUDI = "audi";
 
-    public static ICar getCar(String type) {
+    public static AbstractCar getCar(String type) {
         if (CAR_TYPE_BMW.equals(type)) {
             return new BMW();
         } else if (CAR_TYPE_AUDI.equals(type)) {

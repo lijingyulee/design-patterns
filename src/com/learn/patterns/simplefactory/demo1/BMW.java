@@ -5,7 +5,7 @@ package com.learn.patterns.simplefactory.demo1;
  * @date 2019-11-09
  * @description 宝马汽车
  */
-public class BMW extends ICar {
+public class BMW extends AbstractCar {
 
     @Override
     public void run() {
