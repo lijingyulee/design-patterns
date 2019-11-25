@@ -1,5 +1,7 @@
 # 设计模式
 
+博客地址： https://segmentfault.com/blog/lijingyulee 
+
 ## 设计模式原则
 
 #### 设计模式的目的
