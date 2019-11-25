@@ -224,5 +224,89 @@ public class Demo2Test {
 - 产品数量较少时
 - 客户端只知道需要传入的参数 ，不关心产品是如何创建出来时
   
+## 工厂方法模式
+工厂方法模式：定义一个用于创建对象的接口，但是让子类来决定到底创建哪一个实例。工厂方法模式让一个类的实例化延迟到其子类。
+工厂方法模式，简单来说是来为了解决简单工厂模式所出现的一些缺点而进行的改进。比如当一个简单的工厂模式要生产一个汽车，奥迪汽车，宝马汽车，但是如果要新增一个奔驰汽车。那么就要修改源代码，也就是修改工厂的源代码！添加一个业务逻辑，显然不符合开闭原则，所以就有了工厂方法模式。提供一个抽象工厂方法模式，这样就可以避免新增的时候修改源代码，只要新建一个类来继承了工厂方法模式即可
+#### 示例1
+1. 汽车接口
+```java
+public interface ICar {
+    void run();
+}
+```
+2. 工厂接口
+```java
+public interface ICarFactory {
+    ICar createCar();
+}
+```
+3. 奥迪汽车
+```java
+public class Audi implements ICar {
+    @Override
+    public void run() {
+        System.out.println("奥迪汽车在飞速行驶中...");
+    }
+}
+```
+4. 宝马汽车
+```java
+public class BMW implements ICar {
+    @Override
+    public void run() {
+        System.out.println("宝马在飞速行驶中...");
+    }
+}
+```
+5. 奥迪工厂
+```java
+public class AudiFactory implements ICarFactory {
+    @Override
+    public ICar createCar() {
+        return new Audi();
+    }
+}
+```
+6. 宝马工厂
+```java
+public class BMWFactory implements ICarFactory {
+    @Override
+    public ICar createCar() {
+        return new BMW();
+    }
+}	
+```
+7. 测试类
+```java
+public class Demo1Test {
+    public static void main(String[] args) {
+        AudiFactory audiFactory = new AudiFactory();
+        ICar audi = audiFactory.createCar();
+        audi.run();
 
- 
+        BMWFactory bmwFactory = new BMWFactory();
+        ICar bmw = bmwFactory.createCar();
+        bmw.run();
+
+        /**
+         * 奥迪汽车在飞速行驶中...
+         * 宝马在飞速行驶中...
+         */
+    }
+}
+```
+#### 总结
+优点：
+- 在工厂方法模式中，工厂方法用来创建客户所需要的产品，同时还向客户端隐藏了哪种具体产品类将被实例化这一细节，用户只需要关心所需要产品对应的工厂，无须关心创建细节，甚至无须知道具体产品类的类名。
+- 基于工厂角色和产品角色的多态性设计是工厂方法的关键，他能够让工厂模式自主的创建产品对象，而如何创建这个对象的细节完全封装在工厂类。
+- 使用工厂方法模式最大的优点就是你新加类的时候不用动源代码，只要写新的产品新的工厂来继承对应的类就行了。
+
+缺点：
+- 在添加新产品时，需要编写新的具体产品类，而且还要提供与之对应的具体工厂类，系统中类的个数将成对增加，在一定程度上增加了系统的复杂度，有更多的类需要编译和运行，会给系统带来一些额外的开销。
+
+- 由于考虑到系统的可扩展性，需要引入抽象层，在客户端代码中均使用抽象层进行定义，增加了系统的抽象性和理解难度，且在实现时可能需要用到DOM、反射等技术，增加了系统的实现难度
+
+适用场景：
+1、客户端不知道它所需要的对象的类，在工厂方法模式中，客户端不需要具体产品类的类名，只需要知道所对应的工厂即可，具体产品对象由具体工厂类创建，可见具体产品类的类名在配置文件或者数据库中存在
+
+2、抽象工厂类通过其子类来指定创建那个产品类，用父类来新建子类可以提高可扩展性
