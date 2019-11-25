@@ -52,3 +52,90 @@
 > 针对接口编程，而不是针对实现编程
 > 松耦合
 
+## 设计模式分类
+
+1. 创建型模式：单例模式、抽象工厂模式、原型模式、建造者模式、工厂模式。
+2. 结构型模式：适配器模式、桥接模式、装饰模式、组合模式、外观模式、享元模式、代理模式。
+3. 行为型模式：模版方法模式、命令模式、访问者模式 、迭代器模式、观察者模式、中介者模式、备忘录模式、解释器模式（Interpreter 模式）、状态模式、策略模式、职责链模式(责任链模式)
+
+## 简单工厂模式
+
+![image-20191125141034586](C:\Users\lijy\AppData\Roaming\Typora\typora-user-images\image-20191125141034586.png)
+
+- Factory（工厂角色）：工厂角色即工厂类，它是简单工厂模式的核心，负责实现创建所有产品实例的内部逻辑；工厂类可以被外界直接调用，创建所需的产品对象；在工厂类中提供了静态的工厂方法factoryMethod()，它的返回类型为抽象产品类型Product
+
+- Product（抽象产品角色）：它是工厂类所创建的所有对象的父类，封装了各种产品对象的公有方法，它的引入将提高系统的灵活性，使得在工厂类中只需定义一个通用的工厂方法，因为所有创建的具体产品对象都是其子类对象
+
+- ConcreteProduct（具体产品角色）：它是简单工厂模式的创建目标，所有被创建的对象都充当这个角色的某个具体类的实例。每一个具体产品角色都继承了抽象产品角色，需要实现在抽象产品中声明的抽象方法
+
+#### 示例1
+
+1. 定义抽象类
+```java
+public abstract class ICar {
+
+    public void run() {
+        System.out.println("汽车飞速行驶中...");
+    }
+}
+```
+2. 定义实现子类
+```java
+public class Audi extends ICar {
+    @Override
+    public void run() {
+        System.out.println("奥迪汽车飞速行驶中...");
+    }
+}
+```
+
+```java
+public class BMW extends ICar {
+
+    @Override
+    public void run() {
+        System.out.println("宝马汽车飞速行驶中...");
+    }
+}
+```
+
+3. 定义工厂类
+```java
+public class CarFactory {
+
+    private static final String CAR_TYPE_BMW = "bmw";
+    private static final String CAR_TYPE_AUDI = "audi";
+
+    public static ICar getCar(String type) {
+        if (CAR_TYPE_BMW.equals(type)) {
+            return new BMW();
+        } else if (CAR_TYPE_AUDI.equals(type)) {
+            return new Audi();
+        } else {
+            // 默认返回宝马汽车,避免NPE
+            return new BMW();
+        }
+    }
+
+}
+```
+4. 测试类
+```java
+public static void main(String[] args) {
+
+        // 得到具体的汽车--宝马
+        ICar bwm = CarFactory.getCar("bwm");
+        bwm.run();
+
+        // 得到具体的汽车--奥迪
+        ICar audi = CarFactory.getCar("audi");
+        audi.run();
+
+        /*
+            执行结果：
+                宝马汽车飞速行驶中...
+                奥迪汽车飞速行驶中...
+         */
+
+    }
+```

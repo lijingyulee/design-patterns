@@ -9,11 +9,11 @@ public class Demo1Test {
     public static void main(String[] args) {
 
         // 得到具体的汽车--宝马
-        Car bwm = CarFactory.getCar("bwm");
+        ICar bwm = CarFactory.getCar("bwm");
         bwm.run();
 
         // 得到具体的汽车--奥迪
-        Car audi = CarFactory.getCar("audi");
+        ICar audi = CarFactory.getCar("audi");
         audi.run();
 
         /*
