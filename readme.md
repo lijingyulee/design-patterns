@@ -141,3 +141,67 @@ public class Demo1Test {
     }
 }
 ```
+
+#### 示例2
+
+1. 定义接口
+```java
+public interface IOperation {
+    double getResult(double a, double b);
+}
+```
+2. 定义实现
+```java
+public class AddOperation implements IOperation {
+    @Override
+    public double getResult(double a, double b) {
+        return a + b;
+    }
+}
+```
+
+```java
+public class SubOperation implements IOperation {
+    @Override
+    public double getResult(double a, double b) {
+        return a - b;
+    }
+}
+```
+3. 定义工厂类
+```java
+public class OperationFactory {
+    private static final String OPERATION_TYPE_ADD = "add";
+    private static final String OPERATION_TYPE_SUB = "sub";
+
+    public static IOperation getOperation(String type) {
+        switch (type) {
+            case OPERATION_TYPE_ADD:
+                return new AddOperation();
+            case OPERATION_TYPE_SUB:
+                return new SubOperation();
+            default:
+                return new AddOperation();
+        }
+    }
+}
+```
+4. 定义测试类
+```java
+public class Demo2Test {
+    public static void main(String[] args) {
+        IOperation addOperation = OperationFactory.getOperation("add");
+        double result1 = addOperation.getResult(1.0, 2.0);
+        System.out.println("result1 = " + result1);
+
+        IOperation subOperation = OperationFactory.getOperation("sub");
+        double result2 = subOperation.getResult(10.0, 2.0);
+        System.out.println("result2 = " + result2);
+
+        /**
+         * result1 = 3.0
+         * result2 = 8.0
+         */
+    }
+}
+```
