@@ -696,3 +696,319 @@ public class Type08Test {
 ###### 总结
 - 借助 JDK1.5 中添加的枚举来实现单例模式。不仅能避免多线程同步问题，而且还能防止反序列化重新创建新的对象
 - 这种方式是 Effective Java  作者 Josh Bloch  提倡的方式。 推荐使用 
+
+#### 原型模式
+
+原型模式(Prototype  Pattern)：使用原型实例指定创建对象的种类，并且通过拷贝这些原型创建新的对象。原型模式是一种对象创建型模式。
+需要注意的是通过克隆方法所创建的对象是全新的对象，它们在内存中拥有新的地址，通常对克隆所产生的对象进行修改对原型对象不会造成任何影响，每一个克隆对象都是相互独立的。通过不同的方式修改可以得到一系列相似但不完全相同的对象。
+Java 中 Object 类是所有类的根类，Object 类提供了一个 clone()方法，该方法可以将一个 Java 对象复制一份，但是需要实现 clone的Java类必须要实现一个接口Cloneable，该接口表示该类能够复制且具有复制的能力 =>原型模式
+
+###### 示例1
+- 羊实体类
+```java
+public class Sheep implements Cloneable{
+    private String name;
+    private Integer age;
+    private Sheep friend;
+
+    public Sheep(String name, Integer age, Sheep friend) {
+        this.name = name;
+        this.age = age;
+        this.friend = friend;
+    }
+
+    public Sheep(String name, Integer age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public Sheep getFriend() {
+        return friend;
+    }
+
+    public void setFriend(Sheep friend) {
+        this.friend = friend;
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
+}
+```
+- 测试类
+```java
+public class Demo01Test {
+    public static void main(String[] args) {
+        Sheep tomSheep = new Sheep("Tom", 18);
+        Sheep jamesSheep = new Sheep("James", 22);
+        tomSheep.setFriend(jamesSheep);
+
+        try {
+            Sheep cloneSheep = (Sheep) tomSheep.clone();
+            System.out.println(tomSheep == cloneSheep);
+            System.out.println(tomSheep.getFriend() == cloneSheep.getFriend());
+            /**
+             * false
+             * true
+             */
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+###### 浅拷贝
+- 对于数据类型是基本数据类型的成员变量，浅拷贝会直接进行值传递，也就是将该属性值复制一份给新的对象。
+- 对于数据类型是引用数据类型的成员变量，比如说成员变量是某个数组、某个类的对象等，那么浅拷贝会进行引用传递，也就是只是将该成员变量的引用值（内存地址）复制一份给新的对象。因为实际上两个对象的该成员变量都指向同一个实例。在这种情况下，在一个对象中修改该成员变量会影响到另一个对象的该成员变量值
+- 前面我们克隆羊就是浅拷贝
+- 浅拷贝是使用默认的 clone()方法来实现
+
+###### 深拷贝
+- 复制对象的所有基本数据类型的成员变量值
+- 为所有引用数据类型的成员变量申请存储空间，并复制每个引用数据类型成员变量所引用的对象，直到该对象可达的所有对象。也就是说， 对象进行深拷贝要对整个对象( 包括对象的引用类型) 进行拷贝
+- 深拷贝实现方式 1：重写 clone 方法来实现深拷贝
+- 深拷贝实现方式 2：通过 对象序列化实现深拷贝(推荐)
+
+###### 第一种深拷贝方式
+- 猴子类
+```java
+public class Monkey implements Cloneable{
+    private String name;
+    private Integer age;
+    private Monkey friend;
+
+    public Monkey(String name, Integer age, Monkey friend) {
+        this.name = name;
+        this.age = age;
+        this.friend = friend;
+    }
+
+    public Monkey(String name, Integer age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public Monkey getFriend() {
+        return friend;
+    }
+
+    public void setFriend(Monkey friend) {
+        this.friend = friend;
+    }
+
+    @Override
+    public String toString() {
+        return "Monkey{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                ", friend=" + friend +
+                '}';
+    }
+    
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        Object deep = null;
+        // 基本类型等
+        deep = super.clone();
+        //引用类型的属性单独处理
+        Monkey monkey = (Monkey)deep;
+        if (friend != null) {
+            monkey.friend = (Monkey) friend.clone();
+        }
+        return monkey;
+    }
+}
+```
+- 测试类
+```java
+public class demo02Test {
+    public static void main(String[] args) {
+        Monkey tomMonkey = new Monkey("Tom", 18);
+        Monkey jamesMonkey = new Monkey("James", 22);
+        tomMonkey.setFriend(jamesMonkey);
+
+        try {
+            Monkey cloneMonkey = (Monkey) tomMonkey.clone();
+            System.out.println(tomMonkey == cloneMonkey);
+            System.out.println(tomMonkey.getFriend() == cloneMonkey.getFriend());
+            System.out.println(tomMonkey);
+            System.out.println(cloneMonkey);
+            System.out.println(tomMonkey.getFriend());
+            System.out.println(cloneMonkey.getFriend());
+
+            /**
+             * false
+             * false
+             * Monkey{name='Tom', age=18, friend=Monkey{name='James', age=22, friend=null}}
+             * Monkey{name='Tom', age=18, friend=Monkey{name='James', age=22, friend=null}}
+             * Monkey{name='James', age=22, friend=null}
+             * Monkey{name='James', age=22, friend=null}
+             */
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+###### 深拷贝第二种方式
+- 仍以猴子为例
+```
+public class Monkey implements Serializable {
+    private String name;
+    private Integer age;
+    private Monkey friend;
+
+    public Monkey(String name, Integer age, Monkey friend) {
+        this.name = name;
+        this.age = age;
+        this.friend = friend;
+    }
+
+    public Monkey(String name, Integer age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public Monkey getFriend() {
+        return friend;
+    }
+
+    public void setFriend(Monkey friend) {
+        this.friend = friend;
+    }
+
+    @Override
+    public String toString() {
+        return "Monkey{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                ", friend=" + friend +
+                '}';
+    }
+
+    public Object deepClone() {
+        //创建流对象
+        ByteArrayOutputStream bos = null;
+        ObjectOutputStream oos = null;
+        ByteArrayInputStream bis = null;
+        ObjectInputStream ois = null;
+        try {
+        //序列化
+            bos = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(bos);
+            oos.writeObject(this); //当前这个对象以对象流的方式输出
+        //反序列化
+            bis = new ByteArrayInputStream(bos.toByteArray());
+            ois = new ObjectInputStream(bis);
+            Monkey monkey = (Monkey) ois.readObject();
+            return monkey;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+        //关闭流
+            try {
+                bos.close();
+                oos.close();
+                bis.close();
+                ois.close();
+            } catch (Exception e2) {
+                System.out.println(e2.getMessage());
+            }
+        }
+    }
+
+}
+```
+- 测试类
+```java
+public class Demo03Test {
+    public static void main(String[] args) {
+        Monkey tomMonkey = new Monkey("Tom", 18);
+        Monkey jamesMonkey = new Monkey("Jack", 22);
+        tomMonkey.setFriend(jamesMonkey);
+
+        Monkey cloneMonkey = (Monkey) tomMonkey.deepClone();
+        System.out.println(tomMonkey == cloneMonkey);
+        System.out.println(tomMonkey.getFriend() == cloneMonkey.getFriend());
+        System.out.println(tomMonkey);
+        System.out.println(cloneMonkey);
+        System.out.println(tomMonkey.getFriend());
+        System.out.println(cloneMonkey.getFriend());
+
+        /**
+         * false
+         * false
+         * Monkey{name='Tom', age=18, friend=Monkey{name='Jack', age=22, friend=null}}
+         * Monkey{name='Tom', age=18, friend=Monkey{name='Jack', age=22, friend=null}}
+         * Monkey{name='Jack', age=22, friend=null}
+         * Monkey{name='Jack', age=22, friend=null}
+         */
+
+    }
+}
+
+```
+
+###### 总结
+- 优点
+1. 创建新的对象比较复杂时，可以利用原型模式简化 对象的创建过程，同时也能够提高效率
+2. 不用重新初始化对象，而是 动态地获得对象运行时的状态
+3. 可以使用深克隆的方式保存对象的状态，使用原型模式将对象复制一份并将其状态保存起来，以便在需要的时候使用（如恢复到某一历史状态），可辅助实现撤销操作
+- 缺点
+1. 在实现深克隆的时候可能需要比较复杂的代码
+2. 需要为每一个类配备一个克隆方法，这对全新的类来说不是很难，但对已有的类进行改造时，需要修改其源代码，违背了 ocp 原则
+- 适用场景
+1. 创建新对象成本较大（如初始化需要占用较长的时间，占用太多的CPU资源或网络资源），新的对象可以通过原型模式对已有对象进行复制来获得，如果是相似对象，则可以对其成员变量稍作修改
+2. 一个对象需要提供给其他对象访问,而且各个调用者可能需要修改其值,可以考虑使用原型模式拷贝多个对象供调用者使用,即保护性拷贝
