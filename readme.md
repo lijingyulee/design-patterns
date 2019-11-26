@@ -312,3 +312,128 @@ public class Demo1Test {
 1、客户端不知道它所需要的对象的类，在工厂方法模式中，客户端不需要具体产品类的类名，只需要知道所对应的工厂即可，具体产品对象由具体工厂类创建，可见具体产品类的类名在配置文件或者数据库中存在
 
 2、抽象工厂类通过其子类来指定创建那个产品类，用父类来新建子类可以提高可扩展性
+
+## 抽象工厂模式
+
+抽象工厂模式为创建一组对象提供了一种解决方案。与工厂方法模式相比，抽象工厂模式中的具体工厂不只是创建一种产品，它负责创建一族产品。
+
+在工厂方法模式中具体工厂负责生产具体的产品，每一个具体工厂对应一种具体产品，工厂方法具有唯一性，一般情况下，一个具体工厂中只有一个或者一组重载的工厂方法。但是有时候我们希望一个工厂可以提供多个产品对象，而不是单一的产品对象，如一个水果工厂，它可以生产苹果、香蕉等多种电器，而不是只生产某一种水果。
+
+- 产品等级结构：产品等级结构即产品的继承结构，如一个抽象类是水果，其子类有苹果、香蕉，则抽象水果类与具体的水果之间构成了一个产品等级结构，抽象水果是父类，而具体水果(苹果、香蕉)是其子类。
+
+- 产品族：在抽象工厂模式中，产品族是指由同一个工厂生产的，位于不同产品等级结构中的一组产品，如北方工程生产苹果、香蕉等，北方苹果位于苹果等级结构中，香蕉位于香蕉产品等级结构中，北方苹果、北方香蕉构成了一个产品族。
+
+#### 示例1
+- 抽象水果类
+```java
+public interface Fruit {
+    void show();
+}
+```
+- 抽象水果工厂类
+```java
+public interface FruitFactory {
+    //实例化Apple
+    public Fruit getApple();
+
+    //实例化Banana
+    public Fruit getBanana();
+}
+```
+
+- 北方苹果类
+```java
+public class NorthApple implements Fruit {
+    @Override
+    public void show() {
+        System.out.println("北方的苹果...");
+    }
+}
+```
+- 北方香蕉类
+```
+public class NorthBanana implements Fruit {
+    @Override
+    public void show() {
+        System.out.println("北方的香蕉...");
+    }
+}
+```
+- 南方苹果类
+```java
+public class SouthApple implements Fruit {
+    @Override
+    public void show() {
+        System.out.println("南方的苹果...");
+    }
+}
+```
+- 南方香蕉类
+```java
+public class SouthBanana implements Fruit {
+    @Override
+    public void show() {
+        System.out.println("南方的香蕉...");
+    }
+}
+```
+- 北方工厂
+```java
+public class NorthFactory implements FruitFactory {
+    @Override
+    public NorthApple getApple() {
+        return new NorthApple();
+    }
+
+    @Override
+    public NorthBanana getBanana() {
+        return new NorthBanana();
+    }
+}
+```
+- 南方工厂
+ ```java
+ public class SouthFactory implements FruitFactory {
+    @Override
+    public SouthApple getApple() {
+        return new SouthApple();
+    }
+
+    @Override
+    public SouthBanana getBanana() {
+        return new SouthBanana();
+    }
+}
+ ```
+- 测试类
+```java
+public class Demo1Test {
+    public static void main(String[] args) {
+        SouthFactory southFactory = new SouthFactory();
+        Fruit southApple = southFactory.getApple();
+        southApple.show();
+        Fruit southBanana = southFactory.getBanana();
+        southBanana.show();
+
+        NorthFactory northFactory = new NorthFactory();
+        Fruit northApple = northFactory.getApple();
+        northApple.show();
+        Fruit northBanana = northFactory.getBanana();
+        northBanana.show();
+
+        /**
+         * 南方的苹果...
+         * 南方的香蕉...
+         * 北方的苹果...
+         * 北方的香蕉...
+         */
+
+    }
+}
+```
+
+#### 总结
+优点：
+- 抽象工厂模式隔离了具体类的生成，更换一种具体的工厂比较容易
+- 当一个产品族中的多个对象被设计成一起工作时，它能够保证客户端始终只使用同一个产品族中的对象
+-  增加新的产品族很方便，无须修改已有系统，符合“开闭原则”
