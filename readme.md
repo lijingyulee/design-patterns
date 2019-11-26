@@ -437,3 +437,221 @@ public class Demo1Test {
 - 抽象工厂模式隔离了具体类的生成，更换一种具体的工厂比较容易
 - 当一个产品族中的多个对象被设计成一起工作时，它能够保证客户端始终只使用同一个产品族中的对象
 -  增加新的产品族很方便，无须修改已有系统，符合“开闭原则”
+
+缺点：
+如果需要增加新的产品，需要进行较大的改动
+
+适用场景：
+- 产品等级结构稳定，不会增加或者删除产品
+- 系统中有多个产品族，且每次只使用一个产品族
+- 需要一个产品族的产品一起工作
+
+## 单例模式
+
+#### 创建方式
+- 饿汉式( 静态常量)
+- 饿汉式（静态代码块）
+- 懒汉式(线程不安全)
+- 懒汉式(线程安全，同步方法)
+- 懒汉式(线程安全，同步代码块)
+- 双重检查
+- 静态内部类
+- 枚举
+
+#### 饿汉式( 静态常量)
+步骤：
+1. 构造器私有化 (防止 new )
+2. 类的内部创建对象
+3. 向外暴露一个静态的公共方法(getInstance)
+
+###### 示例1
+- 单例对象：
+```javapublic class Singleton01 {
+    private Singleton01() {}
+
+    private final static Singleton01 instance = new Singleton01();
+
+    public static Singleton01 getInstance() {
+        return instance;
+    }
+}
+```
+- 测试类
+```java
+public class Type01Test {
+    public static void main(String[] args) {
+        Singleton01 instance = Singleton01.getInstance();
+        Singleton01 instance2 = Singleton01.getInstance();
+        System.out.println(instance == instance2); // true
+        System.out.println("instance.hashCode=" + instance.hashCode());
+        System.out.println("instance2.hashCode=" + instance2.hashCode());
+
+        /**
+         * true
+         * instance.hashCode=1689843956
+         * instance2.hashCode=1689843956
+         */
+    }
+}
+```
+###### 总结
+- 优点
+这种写法比较简单，就是在类装载的时候就完成实例化。避免了线程同步问题。
+- 缺点
+在类装载的时候就完成实例化，没有达到 Lazy Loading 的效果。如果从始至终从未使用过这个实例，则会造成内存的浪费
+
+综上所述，这种单例模式可用，但可能造成内存浪费
+
+#### 饿汉式（静态代码块）
+###### 示例1
+- 单例对象：
+public class Singleton02 {
+    private Singleton02() {}
+
+    private static Singleton02 instance;
+    static {
+        instance = new Singleton02();
+    }
+
+    public static Singleton02 getInstance() {
+        return instance;
+    }
+}
+```
+- 测试类
+​```java
+public class Type02Test {
+    public static void main(String[] args) {
+        Singleton02 instance = Singleton02.getInstance();
+        Singleton02 instance2 = Singleton02.getInstance();
+        System.out.println(instance == instance2);
+        System.out.println("instance.hashCode=" + instance.hashCode());
+        System.out.println("instance2.hashCode=" + instance2.hashCode());
+
+        /**
+         * true
+         * instance.hashCode=1689843956
+         * instance2.hashCode=1689843956
+         */
+    }
+}
+```
+###### 总结
+优缺点同第一种方式，可用，可能造成内存浪费
+
+#### 懒汉式(线程不安全)
+
+###### 示例1
+- 单例对象
+```java
+public class Singleton03 {
+    private Singleton03() {}
+
+    private static Singleton03 instance;
+
+    public static Singleton03 getInstance() {
+        if (instance == null) {
+            instance = new Singleton03();
+        }
+        return instance;
+    }
+}
+```
+
+###### 总结
+- 起到了 Lazy Loading 的效果，但是只能在单线程下使用，多线程可能会有多个实例
+- 在实际开发中， 不要使用这种方式
+
+#### 懒汉式(线程安全，同步方法)
+
+###### 示例1
+- 单例对象
+```java
+public class Singleton04 {
+    private Singleton04() {}
+
+    private static Singleton04 instance;
+
+    public static synchronized Singleton04 getInstance() {
+        if (instance == null) {
+            instance = new Singleton04();
+        }
+        return instance;
+
+    }
+}
+```
+- 总结
+- 能够解决线程安全问题
+- 上述代码虽然解决了线程安全问题，但是每次调用getInstance()时都需要进行线程锁定判断，在多线程高并发访问环境中，将会导致系统性能大大降低
+- 在实际开发中， 不推荐使用这种方式
+
+#### 懒汉式(同步代码块)
+
+###### 示例1
+```java
+public class Singleton05 {
+    private Singleton05() {}
+
+    private static Singleton05 instance;
+
+    public static Singleton05 getInstance() {
+        if (instance == null) {
+            synchronized (Singleton05.class) {
+                instance = new Singleton05();
+            }
+        }
+        return instance;
+    }
+}
+```
+
+###### 总结
+假如在某一瞬间线程A和线程B都在调用getInstance()方法，此时instance对象为null值，均能通过instance == null的判断。由于实现了synchronized加锁机制，线程A进入synchronized锁定的代码中执行实例创建代码，线程B处于排队等待状态，必须等待线程A执行完毕后才可以进入synchronized锁定代码。但当A执行完毕时，线程B并不知道实例已经创建，将继续创建新的实例，导致产生多个单例对象，违背单例模式的设计思想，不推荐使用
+
+#### 双重检查
+###### 示例1
+```java
+public class Singleton06 {
+    private Singleton06() {}
+
+    private volatile static Singleton06 instance;
+
+    public static Singleton06 getInstance() {
+        if (instance == null) {
+            synchronized (Singleton06.class) {
+                if(instance == null) {
+                    instance = new Singleton06();
+                }
+            }
+        }
+        return instance;
+    }
+}
+```
+
+###### 总结
+- Double-Check 概念是多线程开发中常使用到的，如代码中所示，我们进行了两次 if (singleton == null)检查，能够保证线程安全
+- 实例化代码只用执行一次，后面再次访问时，判断 if (singleton == null)，直接 return 实例化对象，也避免反复进行方法同步.
+- 线程安全； 延迟加载； 效率较高
+- 需要注意的是，如果使用双重检查锁定来实现懒汉式单例类，需要在静态成员变量instance之前增加修饰符volatile，被volatile修饰的成员变量可以确保多个线程都能够正确处理，且该代码只能在JDK 1.5及以上版本中才能正确执行。由于volatile关键字会屏蔽Java虚拟机所做的一些代码优化，可能会导致系统运行效率降低，因此即使使用双重检查锁定来实现单例模式也不是一种完美的实现方式
+
+#### 静态内部类
+###### 示例1
+- 单例对象
+```java
+public class Singleton07 {
+    private Singleton07() {}
+
+    private static class InnerClass {
+        private static final Singleton07 INSTANCE = new Singleton07();
+    }
+
+    public static Singleton07 getInstance() {
+        return InnerClass.INSTANCE;
+    }
+
+}
+```
+###### 总结
+由于静态单例对象没有作为Singleton07的成员变量直接实例化，因此类加载时不会实例化Singleton07，第一次调用getInstance()时将加载内部类InnerClass，在该内部类中定义了一个static类型的变量INSTANCE，此时会首先初始化这个成员变量，由Java虚拟机来保证其线程安全性，确保该成员变量只能初始化一次。由于getInstance()方法没有任何线程锁定，因此其性能不会造成任何影响。这样我们既可以实现延迟加载，又可以保证线程安全，不影响系统性能。推荐使用
