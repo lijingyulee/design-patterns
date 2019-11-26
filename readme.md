@@ -1012,3 +1012,181 @@ public class Demo03Test {
 - 适用场景
 1. 创建新对象成本较大（如初始化需要占用较长的时间，占用太多的CPU资源或网络资源），新的对象可以通过原型模式对已有对象进行复制来获得，如果是相似对象，则可以对其成员变量稍作修改
 2. 一个对象需要提供给其他对象访问,而且各个调用者可能需要修改其值,可以考虑使用原型模式拷贝多个对象供调用者使用,即保护性拷贝
+
+#### 建造者模式
+建造者模式(Builder Pattern)：将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。建造者模式是一种对象创建型模式。
+
+![builder](D:\develop\workspace\design-patterns\imgs\builder.png)
+
+- Builder（抽象建造者）：它为创建一个产品Product对象的各个部件指定抽象接口，在该接口中一般声明两类方法，一类方法是buildPartX()，它们用于创建复杂对象的各个部件；另一类方法是getResult()，它们用于返回复杂对象。Builder既可以是抽象类，也可以是接口。
+- ConcreteBuilder（具体建造者）：它实现了Builder接口，实现各个部件的具体构造和装配方法，定义并明确它所创建的复杂对象，也可以提供一个方法返回创建好的复杂产品对象。
+- Product（产品角色）：它是被构建的复杂对象，包含多个组成部件，具体建造者创建该产品的内部表示并定义它的装配过程。
+- Director（指挥者）：指挥者又称为导演类，它负责安排复杂对象的建造次序，指挥者与抽象建造者之间存在关联关系，可以在其construct()建造方法中调用建造者对象的部件构造与装配方法，完成复杂对象的建造。客户端一般只需要与指挥者进行交互，在客户端确定具体建造者的类型，并实例化具体建造者对象（也可以通过配置文件和反射机制），然后通过指挥者类的构造函数或者Setter方法将该对象传入指挥者类中
+
+###### 示例1
+
+- 产品(House)
+
+```java
+public class House {
+    private String base;
+    private String wall;
+    private String ceiling;
+    public String getBase() {
+        return base;
+    }
+    public void setBase(String base) {
+        this.base = base;
+    }
+    public String getWall() {
+        return wall;
+    }
+    public void setWall(String wall) {
+        this.wall = wall;
+    }
+    public String getCeiling() {
+        return ceiling;
+    }
+    public void setCeiling(String ceiling) {
+        this.ceiling = ceiling;
+    }
+}
+```
+- builder抽象
+
+```java
+public abstract class Builder {
+    protected House house = new House();
+
+    //将建造的流程写好, 抽象的方法
+    public abstract void buildBase();
+    public abstract void buildWalls();
+    public abstract void buildCelling();
+
+    //建造房子好， 将产品(房子) 返回
+    public House buildHouse() {
+        return house;
+    }
+}
+```
+
+- 普通房子builder
+
+```java
+public class CommonHouseBuilder extends Builder {
+    @Override
+    public void buildBase() {
+        System.out.println("普通房子打地基...");
+    }
+
+    @Override
+    public void buildWalls() {
+        System.out.println("普通房子砌墙...");
+    }
+
+    @Override
+    public void buildCelling() {
+        System.out.println("普通房子修天花板...");
+    }
+}
+
+```
+
+- 高楼builder
+
+```java
+public class HighHouseBuilder extends Builder {
+    @Override
+    public void buildBase() {
+        System.out.println("高楼打地基...");
+    }
+
+    @Override
+    public void buildWalls() {
+        System.out.println("高楼砌墙...");
+    }
+
+    @Override
+    public void buildCelling() {
+        System.out.println("高楼修天花板...");
+    }
+}
+
+```
+
+- 指挥者
+
+```java
+public class Director {
+    private Builder build = null;
+
+    //构造器传入
+    public Director(Builder build) {
+        this.build = build;
+    }
+
+    //通过setter传入
+    public void setHouseBuilder(Builder build) {
+        this.build = build;
+    }
+
+    //如何处理建造房子的流程，交给指挥者
+    public House constructHouse() {
+        build.buildBase();
+        build.buildWalls();
+        build.buildCelling();
+        return build.buildHouse();
+    }
+}
+
+```
+
+- 测试类
+
+```java
+public class Demo01Test {
+    public static void main(String[] args) {
+        CommonHouseBuilder commonHouseBuilder = new CommonHouseBuilder();
+        Director director = new Director(commonHouseBuilder);
+        director.constructHouse();
+        System.out.println("=====================================");
+        director.setHouseBuilder(new HighHouseBuilder());
+        director.constructHouse();
+
+        /**
+         * 普通房子打地基...
+         * 普通房子砌墙...
+         * 普通房子修天花板...
+         * =====================================
+         * 高楼打地基...
+         * 高楼砌墙...
+         * 高楼修天花板...
+         */
+
+    }
+}
+```
+
+###### 总结
+- 优点
+1. 在建造者模式中，客户端不必知道产品内部组成的细节，将产品本身与产品的创建过程解耦，使得相同的创建过程可以创建不同的产品对象
+2. 每一个具体建造者都相对独立，而与其他的具体建造者无关，因此可以很方便地替换具体建造者或增加新的具体建造者，用户使用不同的具体建造者即可得到不同的产品对象。由于指挥者类针对抽象建造者编程，增加新的具体建造者无须修改原有类库的代码，系统扩展方便，符合“开闭原则”
+3. 可以更加精细地控制产品的创建过程。将复杂产品的创建步骤分解在不同的方法中，使得创建过程更加清晰，也更方便使用程序来控制创建过程
+
+- 缺点
+1. 建造者模式所创建的产品一般具有较多的共同点，其组成部分相似，如果产品之间的差异性很大，例如很多组成部分都不相同，不适合使用建造者模式，因此其使用范围受到一定的限制
+2. 如果产品的内部变化复杂，可能会导致需要定义很多具体建造者类来实现这种变化，导致系统变得很庞大，增加系统的理解难度和运行成本
+
+- 适用场景
+
+1. 需要生成的产品对象有复杂的内部结构，这些产品对象通常包含多个成员属性
+
+2. 需要生成的产品对象的属性相互依赖，需要指定其生成顺序
+
+3. 对象的创建过程独立于创建该对象的类。在建造者模式中通过引入了指挥者类，将创建过程封装在指挥者类中，而不在建造者类和客户类中
+
+4. 隔离复杂对象的创建和使用，并使得相同的创建过程可以创建不同的产品
+- 应用场景
+1. 去肯德基，汉堡、可乐、薯条、炸鸡翅等是不变的，而其组合是经常变化的，生成出所谓的"套餐"。
+19元每周三 汉堡+可乐+薯条=套餐可能会发生改变。
+2. JAVA 中的 StringBuilder 数组（单个字符）字整合在一起 字符串
