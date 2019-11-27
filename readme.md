@@ -1190,3 +1190,224 @@ public class Demo01Test {
 1. 去肯德基，汉堡、可乐、薯条、炸鸡翅等是不变的，而其组合是经常变化的，生成出所谓的"套餐"。
 19元每周三 汉堡+可乐+薯条=套餐可能会发生改变。
 2. JAVA 中的 StringBuilder 数组（单个字符）字整合在一起 字符串
+
+
+
+#### 适配器模式
+
+适配器模式(Adapter Pattern)：将一个接口转换成客户希望的另一个接口，使接口不兼容的那些类可以一起工作，其别名为包装器(Wrapper)。适配器模式既可以作为类结构型模式，也可以作为对象结构型模式。
+
+适配器模式分为类适配器模式、对象适配器模式、接口适配器模式。
+
+- 将一个类的接口转换成另一种接口.让原本接口不兼容的类可以兼容
+- 从用户的角度看不到被适配者，是解耦的
+- 用户调用适配器转化出来的目标接口方法，适配器再调用被适配者的相关接口方法
+- 用户收到反馈结果，感觉只是和目标接口交互
+
+###### 类适配器模式
+> 以手机充电为例说明。手机充电只能使用5V电压，生活用电是220V电压，需要一个适配器，将220V电压转化成5V电压，实际调用的还是220V
+
+- 电压接口
+```java
+public interface IVoltage5V {
+    void output5V();
+}
+```
+
+- 被适配类
+```java
+public class Voltage220V {
+    public void output220V() {
+        System.out.println("调用220V...");
+    }
+}
+```
+
+- 适配类
+
+```java
+public class VoltageAdapter extends Voltage220V implements IVoltage5V {
+
+    private String voltage;
+
+    public VoltageAdapter(String voltage) {
+        this.voltage = voltage;
+    }
+
+    @Override
+    public void output5V() {
+        // 可扩展方法output220V，而不修改output220V的源码
+        System.out.println("调用5V...");
+        if ("220".equals(voltage)) {
+            output220V();
+        }
+    }
+}
+```
+
+- 手机类
+
+```java
+public class Phone {
+    public void charging(IVoltage5V iVoltage5V) {
+        // 手机充电只能使用5V电压
+        iVoltage5V.output5V();
+    }
+}
+```
+
+- 测试类
+
+```java
+public class Phone {
+    public void charging(IVoltage5V iVoltage5V) {
+        // 手机充电只能使用5V电压
+        iVoltage5V.output5V();
+    }
+}
+```
+
+###### 对象适配器模式
+基本思路和类的适配器模式相同，只是将 Adapter 类作修改，不是继承被适配 类，而是持有 被适配 类的实例，以解决兼容性的问题。根据“ 合成复用原则”，在系统中尽量使用 关联关系（聚合）来替代继承关系。对象适配器模式是适配器模式常用的一种。
+- 适配器类
+
+```java
+public class VoltageAdapter implements IVoltage5V {
+
+    private String voltage;
+
+    public VoltageAdapter(String voltage, Voltage220V voltage220V) {
+        this.voltage = voltage;
+        this.voltage220V = voltage220V;
+    }
+
+    private Voltage220V voltage220V;
+
+    @Override
+    public void output5V() {
+        // 可扩展方法output220V，而不修改output220V的源码
+        System.out.println("调用5V...");
+        if ("220".equals(voltage)) {
+            voltage220V.output220V();
+        }
+    }
+}
+
+```
+
+###### 接口适配器
+缺省适配器模式(Default Adapter Pattern)：当不需要实现一个接口所提供的所有方法时，可先设计一个抽象类实现该接口，并为接口中每个方法提供一个默认实现（空方法），那么该抽象类的子类可以选择性地覆盖父类的某些方法来实现需求，它适用于不想使用一个接口中的所有方法的情况，又称为单接口适配器模式
+
+- 定义接口
+```java
+public interface IService {
+    void method1();
+    void method2();
+    void method3();
+}
+```
+
+- 定义抽象类
+
+```java
+public abstract class AbstractService implements IService {
+    @Override
+    public void method1() {
+
+    }
+
+    @Override
+    public void method2() {
+
+    }
+
+    @Override
+    public void method3() {
+
+    }
+}
+
+```
+
+- 定义调用
+
+```java
+public class ServiceImpl {
+    public void test(IService iService) {
+        // 只需要用到method1
+        iService.method1();
+    }
+}
+```
+
+- 测试类
+
+```java
+public class Demo03Test {
+    public static void main(String[] args) {
+        ServiceImpl service = new ServiceImpl();
+        service.test(new AbstractService() {
+            @Override
+            public void method1() {
+                System.out.println("我是重写的method1...");
+            }
+        });
+        /**
+         * 我是重写的method1...
+         */
+    }
+}
+```
+
+- 接口适配器模式经典例子
+
+java.awt.KeyListener是一个键盘监听器接口，我们把这个接口的实现类对象注册进容器后，这个容器就会对键盘行为进行监听。
+```java
+public static void main(String[] args) {
+        JFrame frame = new JFrame();
+        frame.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {}
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                System.out.println("hey geek!");
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+            }
+        });
+    }
+```
+
+我们仅使用了一个方法，却实现了接口里的所有方法，如果接口中的方法很多，会造成需要冗余的代码。于是JAVA里为java.awt.KeyListener提供了这样一个适配器：java.awt.KeyAdapter
+```java
+public static void main(String[] args) {
+        JFrame frame = new JFrame();
+        frame.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                System.out.println("fxcku!");
+            }
+        });
+    }
+```
+只需要实现自己需要的方法即可
+
+###### 总结
+适配器模式的优缺点
+- 优点
+1. 将目标类和适配者类解耦，通过引入一个适配器类来重用现有的适配者类，无须修改原有结构
+2. 更好的扩展性：在实现适配器功能的时候，可以扩展自己源的行为（增加方法），从而自然地扩展系统的功能
+3. 增加了类的透明性和复用性，将具体的业务实现过程封装在适配者类中，对于客户端类而言是透明的，而且提高了适配者的复用性，同一个适配者类可以在多个不同的系统中复用
+- 缺点
+1. 在Java中，类适配器模式中的目标抽象类只能为接口，不能为类，其使用有一定的局限性。
+2. 适配者类不能为最终类，如在Java中不能为final类
+3. 对象适配器模式的缺点： 与类适配器模式相比，要在适配器中置换适配者类的某些方法比较麻烦。如果一定要置换掉适配者类的一个或多个方法，可以先做一个适配者类的子类，将适配者类的方法置换掉，然后再把适配者类的子类当做真正的适配者进行适配，实现过程较为复杂
+
+- 适用场景
+
+1. 系统需要使用一些现有的类，而这些类中接口(如方法名)不符合要求，需要扩展方法，或者没有源代码
+
+2. 想创建一个可以重复使用的类，用于与一些彼此之间没有太大关联的一些类，包括一些可能在将来引进的类一起工作
