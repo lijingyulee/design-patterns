@@ -1501,3 +1501,109 @@ public class Demo01Test {
 适用场景：
 1. 一个类存在两个（或多个）独立变化的维度，且这两个（或多个）维度都需要独立进行扩展
 2. 不希望使用继承或因为多层次继承导致系统类的个数急剧增加的系统
+
+#### 装饰者模式
+动态的将新功能附加到对象上。在对象功能扩展方面，它比继承更有弹性， 装饰者模式也体现了
+开闭原则(ocp)
+
+###### 示例1
+
+- 抽象食物
+
+```java
+public abstract class Food {
+    /**
+     * 添加调料方法
+     */
+    abstract void add();
+}
+```
+- 具体食物(面条)
+
+```java
+public class Noodle extends Food {
+    @Override
+    void add() {
+        System.out.println("面条加面..");
+    }
+}
+```
+- 修饰类
+
+```java
+public class Decorator extends Food {
+
+    private Food food;
+
+    public Decorator(Food food) {
+        this.food = food;
+    }
+
+    @Override
+    void add() {
+        food.add();
+    }
+}
+```
+- 加盐
+
+```java
+public class SaltDecorator extends Decorator {
+    public SaltDecorator(Food food) {
+        super(food);
+    }
+
+    @Override
+    void add() {
+        super.add();
+        System.out.println("面条加盐...");
+    }
+}
+```
+- 加醋
+
+```java
+public class VinegarDecorator extends Decorator {
+    public VinegarDecorator(Food food) {
+        super(food);
+    }
+
+    @Override
+    void add() {
+        super.add();
+        System.out.println("面条加醋...");
+    }
+}
+```
+- 测试类
+- 
+```java
+public class Demo01Test {
+    public static void main(String[] args) {
+        Noodle noodle = new Noodle();
+        SaltDecorator saltDecorator = new SaltDecorator(noodle);
+        VinegarDecorator vinegarDecorator = new VinegarDecorator(saltDecorator);
+        vinegarDecorator.add();
+
+        /**
+         * 面条加面..
+         * 面条加盐...
+         * 面条加醋...
+         */
+    }
+}
+```
+- 总结
+
+优点：
+1. 对于扩展一个对象的功能，装饰模式比继承更加灵活性，不会导致类的个数急剧增加
+2. 可以对一个对象进行多次装饰，通过使用不同的具体装饰类以及这些装饰类的排列组合，可以创造出很多不同行为的组合，得到功能更为强大的对象
+3. 具体构件类与具体装饰类可以独立变化，用户可以根据需要增加新的具体构件类和具体装饰类，原有类库代码无须改变，符合“开闭原则
+
+缺点：
+1. 使用装饰器模式会产生很多对象
+2. 多次装饰后，系统排错比较复杂
+
+适用场景：
+1. 动态给类增加职责
+2. 当不能采用继承的方式对系统进行扩展或者采用继承不利于系统扩展和维护时可以使用装饰模式
