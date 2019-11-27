@@ -1411,3 +1411,93 @@ public static void main(String[] args) {
 1. 系统需要使用一些现有的类，而这些类中接口(如方法名)不符合要求，需要扩展方法，或者没有源代码
 
 2. 想创建一个可以重复使用的类，用于与一些彼此之间没有太大关联的一些类，包括一些可能在将来引进的类一起工作
+
+#### 桥接模式
+
+桥接模式(Bridge Pattern)：将抽象部分与它的实现部分分离，使它们都可以独立地变化。它是一种对象结构型模式，又称为柄体(Handle and Body)模式或接口(Interface)模式。更容易理解的表述是：实现系统可从多种维度分类，桥接模式将各维度抽象出来，各维度独立变化，之后可通过聚合，将各维度组合起来，减少了各维度间的耦合。
+
+- 抽象变速器
+
+```java
+public abstract class Transmission {
+    public abstract String gear();
+}
+```
+
+- 手动挡
+
+```java
+public class Manual extends Transmission {
+    @Override
+    public String gear() {
+        return "手动挡";
+    }
+}
+```
+
+- 自动档
+
+```java
+public class Auto extends Transmission {
+    @Override
+    public String gear() {
+        return "自动档";
+    }
+}
+```
+
+- 宝马汽车
+
+```java
+public class BMW extends AbstractCar {
+    @Override
+    public void run() {
+        String gear = super.gear.gear();
+        System.out.println(gear + "宝马");
+    }
+}
+```
+- 奥迪汽车
+
+```java
+public class Audi extends AbstractCar{
+    @Override
+    public void run() {
+        String gear = super.gear.gear();
+        System.out.println(gear + "奥迪");
+    }
+}
+```
+- 测试类
+
+```java
+public class Demo01Test {
+    public static void main(String[] args) {
+        BMW bmw = new BMW();
+        Auto auto = new Auto();
+        bmw.setTransmission(auto);
+        bmw.run();
+
+        Manual manual = new Manual();
+        bmw.setTransmission(manual);
+        bmw.run();
+        /**
+         * 自动档宝马
+         * 手动挡宝马
+         */
+    }
+}
+```
+- 总结
+优点：
+1. 实现了抽象和实现部分的分离，从而极大的提供了系统的灵活性，让抽象部分和实现部分独立开来，这有助于系统进行分层设计，从而产生更好的结构化系统
+2. 桥接模式替代多层继承方案，可以减少 子类的个数，降低系统的管理和维护成本
+3. 桥接模式提高了系统的可扩展性，在两个变化维度中任意扩展一个维度，都不需要修改原有系统，符合“开闭原则”
+
+缺点：
+1. 桥接模式的使用会增加系统的理解与设计难度，由于关联关系建立在抽象层，要求开发者一开始就针对抽象层进行设计与编程。
+2. 桥接模式要求正确识别出系统中两个独立变化的维度，因此其使用范围具有一定的局限性，如何正确识别两个独立维度也需要一定的经验积累。
+
+适用场景：
+1. 一个类存在两个（或多个）独立变化的维度，且这两个（或多个）维度都需要独立进行扩展
+2. 不希望使用继承或因为多层次继承导致系统类的个数急剧增加的系统
