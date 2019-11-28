@@ -1859,3 +1859,142 @@ public class Demo01Test {
 1. 在维护一个遗留的大型系统时，可能这个系统已经变得非常难以维护和扩展，此时可以考虑为新系统开发一个Facade 类，来提供遗留系统的比较清晰简单的接口，让新系统与 Facade 类交互，提高复用性
 2. 当客户端需要调用一系列复杂子系统时候，可以提供一个简单入口的时候使用外观模式
 3. 在层次化结构中，可以使用外观模式定义系统中每一层的入口，层与层之间不直接产生联系，而通过外观类建立联系，降低层之间的耦合度
+
+#### 享元模式
+> 享元模式(Flyweight Pattern)：也叫蝇量模式，运用共享技术有效地支持大量细粒度对象的复用。系统只使用少量的对象，而这些对象都很相似，状态变化很小，可以实现对象的多次复用。由于享元模式要求能够共享的对象必须是细粒度对象，因此它又称为轻量级模式，它是一种对象结构型模式
+> 享元类的设计是享元模式的要点之一，在享元类中要将内部状态和外部状态分开处理，通常将内部状态作为享元类的成员变量，而外部状态通过注入的方式添加到享元类中
+> 享元模式常用于系统底层开发，解决系统的性能问题。像数据库连接池，里面都是创建好的连接对象，在这些连接对象中有我们需要的则直接拿来用，避免重新创建，如果没有我们需要的，则创建一个
+> 享元模式能够解决重复对象的内存浪费的问题，当系统中有大量相似对象，需要缓冲池时。不需总是创建新对象，可以从缓冲池里拿。这样可以降低系统内存，同时提高效率
+> 享元模式经典的应用场景就是池技术了，String 常量池、数据库连接池、缓冲池等等都是享元模式的应用，享元模式是池技术的重要实现方式
+
+![image-20191128153529625](D:\develop\workspace\design-patterns\imgs\flyweightfactory.png)
+
+- Flyweight（抽象享元类）：通常是一个接口或抽象类，在抽象享元类中声明了具体享元类公共的方法，这些方法可以向外界提供享元对象的内部数据（内部状态），同时也可以通过这些方法来设置外部数据（外部状态）。
+
+- ConcreteFlyweight（具体享元类）：它实现了抽象享元类，其实例称为享元对象；在具体享元类中为内部状态提供了存储空间。通常我们可以结合单例模式来设计具体享元类，为每一个具体享元类提供唯一的享元对象。
+
+- UnsharedConcreteFlyweight（非共享具体享元类）：并不是所有的抽象享元类的子类都需要被共享，不能被共享的子类可设计为非共享具体享元类；当需要一个非共享具体享元类的对象时可以直接通过实例化创建。
+
+- FlyweightFactory（享元工厂类）：享元工厂类用于创建并管理享元对象，它针对抽象享元类编程，将各种类型的具体享元对象存储在一个享元池中，享元池一般设计为一个存储“键值对”的集合（也可以是其他类型的集合），可以结合工厂模式进行设计；当用户请求一个具体享元对象时，享元工厂提供一个存储在享元池中已创建的实例或者创建一个新的实例（如果不存在的话），返回新创建的实例并将其存储在享元池中
+
+###### 示例1
+以棋子为例说明：棋子只有黑白两色，所有棋子颜色就是棋子的内部状态，而各个棋子的差别就是位置的不同，当我们落完子之后，落子的颜色是定的，但位置是变化的，所以棋子坐标就是棋子的外部状态。
+
+- 坐标类
+
+```java
+public class Coordinate {
+    private int x;
+    private int y;
+
+    public Coordinate(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+}
+```
+- 棋子抽象
+
+```java
+public abstract class IChessman {
+    public abstract String getColor();
+
+    public void display(Coordinate coord){
+        System.out.println("棋子颜色：" + this.getColor() + "，棋子位置：" + coord.getX() + "，" + coord.getY() );
+    }
+}
+```
+- 黑棋
+
+```java
+public class BlackChessman extends IChessman {
+    @Override
+    public String getColor() {
+        return "黑色";
+    }
+}
+```
+- 白棋
+
+```java
+public class WriteChessman extends IChessman {
+    @Override
+    public String getColor() {
+        return "白色";
+    }
+}
+
+```
+- 棋子工厂
+
+```java
+public class ChessmanFactory {
+    private static HashMap<String, IChessman> pool;
+
+    static {
+        pool = new HashMap<>();
+        BlackChessman blackChessman = new BlackChessman();
+        WriteChessman writeChessman = new WriteChessman();
+        pool.put("black", blackChessman);
+        pool.put("write", writeChessman);
+    }
+
+    public static IChessman getChessman(String color) {
+        return pool.get(color);
+    }
+}
+```
+- 测试类
+
+```java
+public class Demo01Test {
+    public static void main(String[] args) {
+        IChessman black1 = ChessmanFactory.getChessman("black");
+        IChessman black2 = ChessmanFactory.getChessman("black");
+
+        System.out.println(black1 == black2);
+
+        black1.display(new Coordinate(1, 2));
+        black2.display(new Coordinate(3, 4));
+
+        /**
+         * true
+         * 棋子颜色：黑色，棋子位置：1，2
+         * 棋子颜色：黑色，棋子位置：3，4
+         */
+
+    }
+}
+```
+
+###### 总结
+- 与其他模式的联用
+  + 在享元模式的享元工厂类中通常提供一个静态的工厂方法用于返回享元对象，使用简单工厂模式来生成享元对象。
+
+  + 在一个系统中，通常只有唯一一个享元工厂，因此可以使用单例模式进行享元工厂类的设计。
+
+  + 享元模式可以结合组合模式形成复合享元模式，统一对多个享元对象设置外部状态
+
+- 适用场景
+
+  + 一个系统有大量相同或者相似的对象，造成内存的大量耗费。
+
+  + 对象的大部分状态都可以外部化，可以将这些外部状态传入对象中
+
+  + 在使用享元模式时需要维护一个存储享元对象的享元池，而这需要耗费一定的系统资源，因此，应当在需要多次重复使用享元对象时才值得使用享元模式
