@@ -1616,4 +1616,169 @@ public class Demo01Test {
 
 #### 组合模式
 > 组合模式(Composite Pattern)：组合多个对象形成树形结构以表示具有“整体—部分”关系的层次结构。组合模式对单个对象（即叶子对象）和组合对象（即容器对象）的使用具有一致性，组合模式又可以称为“整体—部分”(Part-Whole)模式，它是一种对象结构型模式。
+>
+>  对于树形结构，当容器对象（如文件夹）的某一个方法被调用时，将遍历整个树形结构，寻找也包含这个方法的成员对象（可以是容器对象，也可以是叶子对象）并调用执行，牵一而动百，其中使用了递归调用的机制来对整个结构进行处理。由于容器对象和叶子对象在功能上的区别，在使用这些对象的代码中必须有区别地对待容器对象和叶子对象，而实际上大多数情况下我们希望一致地处理它们，因为对于这些对象的区别对待将会使得程序非常复杂。组合模式为解决此类问题而诞生，它可以让叶子对象和容器对象的使用具有一致性。
 
+###### 示例1
+以学校的组织机构为例
+
+- 组织抽象
+
+```java
+public abstract class Organization {
+    private String name;
+
+    public Organization(String name) {
+        this.name = name;
+    }
+
+    protected void add(Organization organization) {
+        throw new UnsupportedOperationException("不支持添加操作");
+    }
+
+    protected void remove(Organization organization) {
+        throw new UnsupportedOperationException("不支持删除操作");
+    }
+
+    protected abstract void getInfo();
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+```
+
+- 大学
+
+```java
+public class University extends Organization {
+
+    private List<Organization> organizationList = new ArrayList<>();
+
+    public University(String name) {
+        super(name);
+    }
+
+    @Override
+    protected void add(Organization organization) {
+        organizationList.add(organization);
+    }
+
+    @Override
+    protected void remove(Organization organization) {
+        organizationList.remove(organization);
+    }
+
+    @Override
+    protected void getInfo() {
+        System.out.println(this.getName());
+        organizationList.forEach(organization -> organization.getInfo());
+    }
+
+}
+```
+- 学院
+
+```java
+public class College extends Organization {
+
+    private List<Organization> organizationList = new ArrayList<>();
+
+    public College(String name) {
+        super(name);
+    }
+
+    @Override
+    protected void add(Organization organization) {
+        organizationList.add(organization);
+    }
+
+    @Override
+    protected void remove(Organization organization) {
+        organizationList.remove(organization);
+    }
+
+    @Override
+    protected void getInfo() {
+        System.out.println("  " + this.getName());
+        organizationList.forEach(organization -> organization.getInfo());
+    }
+}
+```
+- 部门
+
+```java
+public class Department extends Organization {
+
+    public Department(String name) {
+        super(name);
+    }
+
+    @Override
+    protected void getInfo() {
+        System.out.println("    " + this.getName());
+    }
+}
+```
+- 测试类
+
+```java
+public class Demo01Test {
+    public static void main(String[] args) {
+        // 大学
+        University university = new University("清华大学");
+
+        // 计算机系
+        College computerCollege = new College("计算机系");
+        computerCollege.add(new Department("软件工程"));
+        computerCollege.add(new Department("安全工程"));
+
+        // 信息工程
+        College infoEngineercollege = new College("信息工程学院");
+        infoEngineercollege.add(new Department("信息工程"));
+        infoEngineercollege.add(new Department("通信工程"));
+
+        university.add(computerCollege);
+        university.add(infoEngineercollege);
+
+        university.getInfo();
+        System.out.println("---------------------");
+
+        infoEngineercollege.getInfo();
+
+        /**
+         * 清华大学
+         *   计算机系
+         *     软件工程
+         *     安全工程
+         *   信息工程学院
+         *     信息工程
+         *     通信工程
+         * ---------------------
+         *   信息工程学院
+         *     信息工程
+         *     通信工程
+         */
+    }
+}
+```
+
+###### 总结
+优点：
+1. 简化客户端操作。客户端只需要面对一致的对象而不用考虑整体部分或者节点叶子的问题
+2. 具有较强的扩展性。当我们要更改组合对象时，我们只需要调整内部的层次关系，客户端不用做出任何改动.
+3. 方便创建出复杂的层次结构。客户端不用理会组合里面的组成细节，容易添加节点或者叶子从而创建出复杂的树形结构
+
+缺点：
+如果 节点和叶子有很多差异性的话，比如很多方法和属性都不一样 ， 不适合使用组合模式
+
+适用场景：
+1. 在具有整体和部分的层次结构中，希望通过一种方式忽略整体与部分的差异，客户端可以一致地对待它们
+
+2. 需要遍历组织机构，或者处理的对象具有树形结构时
+
+3. 在一个系统中能够分离出叶子对象和容器对象，而且它们的类型不固定，需要增加一些新的类型
