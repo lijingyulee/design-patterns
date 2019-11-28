@@ -229,6 +229,7 @@ public class Demo2Test {
 ## 工厂方法模式
 工厂方法模式：定义一个用于创建对象的接口，但是让子类来决定到底创建哪一个实例。工厂方法模式让一个类的实例化延迟到其子类。
 工厂方法模式，简单来说是来为了解决简单工厂模式所出现的一些缺点而进行的改进。比如当一个简单的工厂模式要生产一个汽车，奥迪汽车，宝马汽车，但是如果要新增一个奔驰汽车。那么就要修改源代码，也就是修改工厂的源代码！添加一个业务逻辑，显然不符合开闭原则，所以就有了工厂方法模式。提供一个抽象工厂方法模式，这样就可以避免新增的时候修改源代码，只要新建一个类来继承了工厂方法模式即可
+
 #### 示例1
 1. 汽车接口
 ```java
@@ -1259,10 +1260,15 @@ public class Phone {
 - 测试类
 
 ```java
-public class Phone {
-    public void charging(IVoltage5V iVoltage5V) {
-        // 手机充电只能使用5V电压
-        iVoltage5V.output5V();
+public class demo01Test {
+    public static void main(String[] args) {
+        VoltageAdapter voltageAdapter = new VoltageAdapter("220");
+        Phone phone = new Phone();
+        phone.charging(voltageAdapter);
+        /**
+         * 调用5V...
+         * 调用220V...
+         */
     }
 }
 ```
@@ -1607,3 +1613,7 @@ public class Demo01Test {
 适用场景：
 1. 动态给类增加职责
 2. 当不能采用继承的方式对系统进行扩展或者采用继承不利于系统扩展和维护时可以使用装饰模式
+
+#### 组合模式
+> 组合模式(Composite Pattern)：组合多个对象形成树形结构以表示具有“整体—部分”关系的层次结构。组合模式对单个对象（即叶子对象）和组合对象（即容器对象）的使用具有一致性，组合模式又可以称为“整体—部分”(Part-Whole)模式，它是一种对象结构型模式。
+
