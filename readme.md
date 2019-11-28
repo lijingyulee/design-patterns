@@ -1994,7 +1994,181 @@ public class Demo01Test {
 - 适用场景
 
   + 一个系统有大量相同或者相似的对象，造成内存的大量耗费。
-
-  + 对象的大部分状态都可以外部化，可以将这些外部状态传入对象中
-
++ 对象的大部分状态都可以外部化，可以将这些外部状态传入对象中
   + 在使用享元模式时需要维护一个存储享元对象的享元池，而这需要耗费一定的系统资源，因此，应当在需要多次重复使用享元对象时才值得使用享元模式
+
+#### 代理模式
+
+>  代理模式：为一个对象提供一个替身，以控制对这个对象的访问。即通过代理对象访问目标对象,可以在目标对象实现的基础上,增强额外的功能操作,即扩展目标对象的功能
+>  代理模式有不同的形式, 主要有三种  静态代理、理 动态代理 (JDK 代理、接口代理)和 Cglib 理 代理 (可以在内存动态的创建对象，而不需要实现接口， 他是属于动态代理的范畴)
+
+###### 静态代理
+> 静态代理在使用时,需要定义接口或者父类,被代理对象(即目标对象)与代理对象一起实现相同的接口或者是继承相同父类
+
+以老师与助教为例说明。
+- 讲课接口
+
+```java
+public interface Iteach {
+    /**
+     * 讲课接口
+     */
+    void teach();
+}
+```
+- 老师
+
+```java
+public class Teacher implements Iteach {
+    @Override
+    public void teach() {
+        System.out.println("老师传播知识");
+    }
+}
+```
+- 助教
+
+```java
+public class AssistantProxy implements Iteach{
+
+    private Iteach target;
+
+    public AssistantProxy(Iteach target) {
+        this.target = target;
+    }
+
+    @Override
+    public void teach() {
+        System.out.println("助教准备上课材料");
+        target.teach();
+        System.out.println("助教收取反馈");
+    }
+}
+```
+- 测试类
+
+```java
+public class StaticProxyTest {
+    public static void main(String[] args) {
+        AssistantProxy assistantProxy = new AssistantProxy(new Teacher());
+        assistantProxy.teach();
+        /**
+         * 助教准备上课材料
+         * 老师传播知识
+         * 助教收取反馈
+         */
+    }
+}
+```
+
+- 优点：在不修改目标对象的功能前提下, 能通过代理对象对目标功能扩展
+- 缺点：因为代理对象需要与目标对象实现一样的接口,所以会有很多代理类
+- 一旦接口增加方法,目标对象与代理对象都要维护
+
+###### 动态代理
+> 代理对象,不需要实现接口，但是目标对象要实现接口，否则不能用动态代理,代理对象的生成。利用 JDK 的 API，动态的在内存中构建代理对象。动态代理也叫做：JDK 代理、接口代理
+
+仍然以教师的例子说明。只需要建一个动态代理工厂类。
+- 动态代理
+
+```java
+public class ProxyFactory implements InvocationHandler {
+
+    private Object target;
+
+    public ProxyFactory(Object target) {
+        this.target = target;
+    }
+
+    public Object getProxyInstance() {
+        return Proxy.newProxyInstance(target.getClass().getClassLoader(), target.getClass().getInterfaces(), this);
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        System.out.println("动态代理：准备材料");
+        method.invoke(target, args);
+        System.out.println("动态代理:收取反馈");
+        return null;
+    }
+}
+```
+
+- 测试类
+
+```java
+public class DynamicProxyTest {
+    public static void main(String[] args) {
+        Teacher teacher = new Teacher();
+        ProxyFactory proxyFactory = new ProxyFactory(teacher);
+        Iteach proxyInstance = (Iteach) proxyFactory.getProxyInstance();
+        proxyInstance.teach();
+        /**
+         * 动态代理：准备材料
+         * 老师传播知识
+         * 动态代理:收取反馈
+         */
+    }
+}
+```
+
+###### CGLIB动态代理
+
+- 静态代理和 JDK 代理模式都要求目标对象是实现一个接口,但是有时候目标对象只是一个单独的对象,并没有实现任何的接口,这个时候可使用目标对象子类来实现代理-这就是 Cglib 代理
+-  Cglib代理也叫作子类代理,它是在内存中构建一个子类对象从而实现对目标对象功能扩展, 有些书也将Cglib代理归属到动态代理。
+- Cglib 是一个强大的高性能的代码生成包,它可以在运行期扩展 java 类与实现 java 接口.它广泛的被许多 AOP 的框架使用,例如 SpringAOP，实现方法拦截
+- 在 AOP 编程中如何选择代理模式：
+  1. 目标对象需要实现接口，用 JDK 代理
+  2. 目标对象不需要实现接口，用 Cglib 代理
+-  Cglib 包的底层是通过使用字节码处理框架 ASM 来转换字节码并生成新的类
+
+仍然以教师为例。教师不实现接口
+- 教师
+```java
+public class Teacher {
+    public void teach() {
+        System.out.println("老师传播知识");
+    }
+}
+```
+- cglib动态代理
+
+```java
+public class CglibProxyFactory implements MethodInterceptor {
+
+    public Object getProxyInstance(Object object) {
+        return Enhancer.create(object.getClass(), this);
+    }
+
+    @Override
+    public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
+        System.out.println("动态代理：准备材料");
+        methodProxy.invokeSuper(o, objects);
+        System.out.println("动态代理:收取反馈");
+        return null;
+    }
+}
+```
+- 测试类
+
+```java
+public class CglibProxyTest {
+    public static void main(String[] args) {
+        Teacher proxyInstance = (Teacher) new CglibProxyFactory().getProxyInstance(new Teacher());
+        proxyInstance.teach();
+        /**
+         * 动态代理：准备材料
+         * 老师传播知识
+         * 动态代理:收取反馈
+         */
+    }
+}
+```
+
+###### 代理总结
+- 几种常见的代理
+
+1. 远程代理:当客户端对象需要访问远程主机中的对象
+2. 防火墙代理:内网通过代理穿透防火墙，实现对公网的访问
+3. 缓存代理:比如：当请求图片文件等资源时，先到缓存代理取，如果取到资源则 ok,如果取不到资源，再到公网或者数据库取，然后缓存
+4. 虚拟代理:当需要用一个消耗资源较少的对象来代表一个消耗资源较多的对象，从而降低系统开销、缩短运行时间时
