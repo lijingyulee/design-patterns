@@ -2172,3 +2172,112 @@ public class CglibProxyTest {
 2. 防火墙代理:内网通过代理穿透防火墙，实现对公网的访问
 3. 缓存代理:比如：当请求图片文件等资源时，先到缓存代理取，如果取到资源则 ok,如果取不到资源，再到公网或者数据库取，然后缓存
 4. 虚拟代理:当需要用一个消耗资源较少的对象来代表一个消耗资源较多的对象，从而降低系统开销、缩短运行时间时
+
+#### 模板方法
+> 模板方法模式：定义一个操作中算法的框架，而将一些步骤延迟到子类中。模板方法模式使得子类可以不改变一个算法的结构即可重定义该算法的某些特定步骤
+
+###### 示例1
+以打豆浆为例，选择好豆子，添加配料，浸泡，打碎，其中只有添加配料是变化的
+- 抽象模板
+
+```java
+public abstract class SoyaMilkTemplate {
+    //选材料
+    void select() {
+        System.out.println("选择好的新鲜黄豆");
+    }
+
+    //添加不同的配料， 抽象方法, 子类具体实现
+    abstract void addCondiments();
+
+    //浸泡
+    void soak() {
+        System.out.println("材料开始浸泡");
+    }
+
+    void beat() {
+        System.out.println("材料放到豆浆机去打碎");
+    }
+
+    // 在模板方法模式的 父类中，我们可以 定义一个方法，它 默认不做任何事，子类可以视情况要不要覆盖它，该方法称为“钩子”
+    //钩子方法，决定是否需要添加配料
+    boolean customerWantCondiments() {
+        return true;
+    }
+
+    //模板方法可以做成final,不让子类去覆盖
+    final void make() {
+        select();
+        if(customerWantCondiments()) {
+            addCondiments();
+        }
+        soak();
+        beat();
+
+    }
+
+}
+
+```
+- 纯豆浆
+
+```java
+public class PureSoyaMilk extends SoyaMilkTemplate {
+    @Override
+    void addCondiments() {
+
+    }
+
+    @Override
+    boolean customerWantCondiments() {
+        return false;
+    }
+}
+```
+- 添加花生的豆浆
+
+```java
+public class PeanutSoyaMilk extends SoyaMilkTemplate {
+    @Override
+    void addCondiments() {
+        System.out.println("加入上好的花生");
+    }
+}
+
+```
+- 测试类
+
+```java
+public class TemplateTest {
+    public static void main(String[] args) {
+        PureSoyaMilk pureSoyaMilk = new PureSoyaMilk();
+        pureSoyaMilk.make();
+        System.out.println("-------------------");
+        PeanutSoyaMilk peanutSoyaMilk = new PeanutSoyaMilk();
+        peanutSoyaMilk.make();
+        /**
+         * 选择好的新鲜黄豆
+         * 材料开始浸泡
+         * 材料放到豆浆机去打碎
+         * -------------------
+         * 选择好的新鲜黄豆
+         * 加入上好的花生
+         * 材料开始浸泡
+         * 材料放到豆浆机去打碎
+         */
+    }
+}
+```
+
+###### 总结
+优点：
+1. 算法只存在于一个地方，也就是在父类中，容易修改。需要修改算法时，只要修改父类的模板方
+法或者已经实现的某些步骤，子类就会继承这些修改
+2. 实现了最大化代码复用。父类的模板方法和已实现的某些步骤会被子类继承而直接使用。
+3. 既统一了算法，也提供了很大的灵活性。父类的模板方法确保了算法的结构保持不变，同时由子类提供部分步骤的实现。
+
+缺点：
+每一个不同的实现都需要一个子类实现，导致类的个数增加，使得系统更加庞大
+
+适用场景：
+当要完成在某个过程，该过程要执行一系列步骤 ，这一系列的步骤基本相同，但其个别步骤在实现时可能不同，通常考虑用模板方法模式来处理
