@@ -2281,3 +2281,192 @@ public class TemplateTest {
 
 适用场景：
 当要完成在某个过程，该过程要执行一系列步骤 ，这一系列的步骤基本相同，但其个别步骤在实现时可能不同，通常考虑用模板方法模式来处理
+
+#### 策略模式
+> 策略模式(Strategy Pattern)：定义一系列算法类，将每一个算法封装起来，并让它们可以相互替换，策略模式让算法独立于使用它的客户而变化，也称为政策模式(Policy)。策略模式是一种对象行为型模式
+
+###### 示例1
+- 策略接口
+
+```java
+public interface IStrategy {
+    void AlgorithmInterface();
+}
+```
+- 算法A
+
+```java
+public class AlgorithmA implements IStrategy {
+    @Override
+    public void AlgorithmInterface() {
+        System.out.println("实现算法A");
+    }
+}
+```
+- 算法B
+
+```java
+public class AlgorithmB implements IStrategy {
+    @Override
+    public void AlgorithmInterface() {
+        System.out.println("实现算法B");
+    }
+}
+```
+- 环境类
+
+```java
+public class StrategyContext {
+    private IStrategy strategy;
+
+    public StrategyContext(IStrategy IStrategy) {
+        this.strategy = IStrategy;
+    }
+
+    public void algorithm() {
+        strategy.AlgorithmInterface();
+    }
+}
+```
+- 测试类
+
+```java
+public class Strategy01Test {
+
+    private static final String STRATEGY_A = "A";
+
+    public static void main(String[] args) {
+
+        // 模拟参数
+        String paramA = "A";
+        IStrategy algorithmA = getAlgorithm(paramA);
+        new StrategyContext(algorithmA).algorithm();
+
+        System.out.println("----------------------");
+
+        String paramB = "B";
+        IStrategy algorithmB = getAlgorithm(paramB);
+
+        new StrategyContext(new AlgorithmB()).algorithm();
+
+        /**
+         * 实现算法A
+         * ----------------------
+         * 实现算法B
+         */
+    }
+
+    private static IStrategy getAlgorithm(String param) {
+        if (STRATEGY_A.equals(param)) {
+            return new AlgorithmA();
+        }
+        return new AlgorithmB();
+    }
+}
+```
+###### 示例2
+在实际开发中我们还有另一种模式，比如鸭子有会飞的和不会飞的，我们可以将会飞和不会飞定义成策略，维护在不同的鸭子实体类中
+
+- 抽象鸭子类
+
+```java
+public abstract class Duck {
+    Fly fly;
+
+    abstract void info();
+}
+```
+- 家鸭
+
+```java
+public class DomesticDuck extends Duck {
+    public DomesticDuck() {
+        fly = new NoFly();
+    }
+
+    @Override
+    void info() {
+        if (fly != null) {
+            fly.fly();
+        }
+    }
+}
+```
+- 野鸭
+
+```java
+public class WildDuck extends Duck {
+    public WildDuck() {
+        fly = new CanFly();
+    }
+
+    @Override
+    void info() {
+        if (fly != null) {
+            fly.fly();
+        }
+    }
+}
+```
+- 飞翔接口
+
+```java
+public interface Fly {
+    void fly();
+}
+```
+- 会飞
+
+```java
+public class CanFly implements Fly {
+    @Override
+    public void fly() {
+        System.out.println("会飞");
+    }
+}
+```
+- 不会飞
+
+```java
+public class NoFly implements Fly {
+    @Override
+    public void fly() {
+        System.out.println("不会飞");
+    }
+}
+```
+- 测试类
+
+```java
+public class Strategy02Test {
+    public static void main(String[] args) {
+        WildDuck wildDuck = new WildDuck();
+        wildDuck.info();
+
+        System.out.println("---------------------");
+
+        DomesticDuck domesticDuck = new DomesticDuck();
+        domesticDuck.info();
+
+        /**
+         * 会飞
+         * ---------------------
+         * 不会飞
+         */
+    }
+}
+
+```
+
+###### 总结
+- 优点
+  + 策略模式提供了对“开闭原则”的完美支持，用户可以在不修改原有系统的基础上选择算法或行为，也可以灵活地增加新的算法或行为
+  + 策略模式提供了管理相关的算法族的办法。策略类的等级结构定义了一个算法或行为族，恰当使用继承可以把公共的代码移到抽象策略类中，从而避免重复的代码
+  + 策略模式提供了一种算法的复用机制，由于将算法单独提取出来封装在策略类中，因此不同的环境类可以方便地复用这些策略类
+- 缺点
+  + 每添加一个策略就要增加一个类，当策略过多是会导致类数目庞大
+  + 无法同时在客户端使用多个策略类
+  + 客户端必须知道所有的策略类，并自行决定使用哪一个策略类。这就意味着客户端必须理解这些算法的区别，以便适时选择恰当的算法。换言之，策略模式只适用于客户端知道所有的算法或行为的情况
+- 适用场景
+  + 一个系统需要动态地在几种算法中选择一种，那么可以将这些算法封装到一个个的具体算法类中，而这些具体算法类都是一个抽象算法类的子类
+  + 有大量判断的系统，可以考虑用策略模式重构
