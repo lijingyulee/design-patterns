@@ -1422,6 +1422,8 @@ public static void main(String[] args) {
 
 桥接模式(Bridge Pattern)：将抽象部分与它的实现部分分离，使它们都可以独立地变化。它是一种对象结构型模式，又称为柄体(Handle and Body)模式或接口(Interface)模式。更容易理解的表述是：实现系统可从多种维度分类，桥接模式将各维度抽象出来，各维度独立变化，之后可通过聚合，将各维度组合起来，减少了各维度间的耦合。
 
+###### 示例1
+
 - 抽象变速器
 
 ```java
@@ -1448,6 +1450,19 @@ public class Auto extends Transmission {
     @Override
     public String gear() {
         return "自动档";
+    }
+}
+```
+- 抽象汽车
+
+```java
+public abstract class AbstractCar {
+    protected Transmission gear;
+
+    public abstract void run();
+
+    public void setTransmission(Transmission gear) {
+        this.gear = gear;
     }
 }
 ```
@@ -1494,7 +1509,7 @@ public class Demo01Test {
     }
 }
 ```
-- 总结
+###### 总结
 优点：
 1. 实现了抽象和实现部分的分离，从而极大的提供了系统的灵活性，让抽象部分和实现部分独立开来，这有助于系统进行分层设计，从而产生更好的结构化系统
 2. 桥接模式替代多层继承方案，可以减少 子类的个数，降低系统的管理和维护成本
@@ -2470,3 +2485,244 @@ public class Strategy02Test {
 - 适用场景
   + 一个系统需要动态地在几种算法中选择一种，那么可以将这些算法封装到一个个的具体算法类中，而这些具体算法类都是一个抽象算法类的子类
   + 有大量判断的系统，可以考虑用策略模式重构
+
+#### 命令模式
+> 命令模式(Command Pattern)：将一个请求封装为一个对象，从而让我们可用不同的请求对客户进行参数化；对请求排队或者记录请求日志，以及支持可撤销的操作。命令模式是一种对象行为型模式，其别名为动作(Action)模式或事务(Transaction)模式
+> 在软件开发中，我们经常需要向某些对象发送请求（调用其中的某个或某些方法），但是并不知道请求的接收者是谁，也不知道被请求的操作是哪个，此时，我们特别希望能够以一种松耦合的方式来设计软件，使得请求发送者与请求接收者能够消除彼此之间的耦合，让对象之间的调用关系更加灵活，可以灵活地指定请求接收者以及被请求的操作。命令模式为此类问题提供了一个较为完美的解决方案
+> 通俗理解：将军发布命令，士兵去执行
+
+###### 示例1
+以家里的智能遥控器为例。如果按钮的功能与执行耦合，比如有两排按钮，第一排控制电灯，第二排控制电视 ，如果有人想定制化，将第一排改成电视控制，第二排改成电灯控制，将会非常困难
+- 抽象命令
+```java
+public interface Command {
+
+    /**
+     * 执行
+     */
+    void execute();
+
+    /**
+     * 撤销
+     */
+    public void undo();
+}
+```
+- 空命令
+```java
+命令，不执行任何操作，可以省去为空判断
+public class NoCommand implements Command {
+    @Override
+    public void execute() {
+
+    }
+
+    @Override
+    public void undo() {
+
+    }
+}
+```
+- 电灯打开命令
+```java
+public class LightOnCommand implements Command {
+
+    private LightReceiver lightReceiver;
+
+    public LightOnCommand(LightReceiver lightReceiver) {
+        this.lightReceiver = lightReceiver;
+    }
+
+    @Override
+    public void execute() {
+        lightReceiver.on();
+    }
+
+    @Override
+    public void undo() {
+        lightReceiver.off();
+    }
+}
+```
+- 电灯关闭命令
+```java
+public class LightOffCommand implements Command {
+
+    private LightReceiver lightReceiver;
+
+    public LightOffCommand(LightReceiver lightReceiver) {
+        this.lightReceiver = lightReceiver;
+    }
+
+    @Override
+    public void execute() {
+        lightReceiver.off();
+    }
+
+    @Override
+    public void undo() {
+        lightReceiver.on();
+    }
+}
+```
+- 电灯执行者
+```java
+public class LightReceiver {
+    public void on() {
+        System.out.println(" 电灯打开了.. ");
+    }
+
+    public void off() {
+        System.out.println(" 电灯关闭了.. ");
+    }
+}
+```
+- 电视打开命令
+```java
+public class TVOnCommand implements Command {
+
+    private TVReceiver tvReceiver;
+
+    public TVOnCommand(TVReceiver tvReceiver) {
+        this.tvReceiver = tvReceiver;
+    }
+
+    @Override
+    public void execute() {
+        tvReceiver.on();
+    }
+
+    @Override
+    public void undo() {
+        tvReceiver.off();
+    }
+}
+```
+- 电视关闭命令
+```java
+public class TVOffCommand implements Command {
+
+    private TVReceiver tvReceiver;
+
+    public TVOffCommand(TVReceiver tvReceiver) {
+        this.tvReceiver = tvReceiver;
+    }
+
+    @Override
+    public void execute() {
+        tvReceiver.off();
+    }
+
+    @Override
+    public void undo() {
+        tvReceiver.on();
+    }
+}
+```
+- 电视执行者
+```java
+public class TVReceiver {
+	
+	public void on() {
+		System.out.println(" 电视机打开了.. ");
+	}
+	
+	public void off() {
+		System.out.println(" 电视机关闭了.. ");
+	}
+}
+```
+- 遥控器类
+```java
+public class RemoteController {
+    // 打开功能按钮
+    Command[] onCommands;
+    // 关闭功能按钮
+    Command[] offCommands;
+    // 执行撤销的命令
+    Command undoCommand;
+
+    public RemoteController() {
+
+        onCommands = new Command[2];
+        offCommands = new Command[2];
+
+        for (int i = 0; i < 2; i++) {
+            onCommands[i] = new NoCommand();
+            offCommands[i] = new NoCommand();
+        }
+    }
+
+    public void setCommand(int index, Command onCommand, Command offCommand) {
+        onCommands[index] = onCommand;
+        offCommands[index] = offCommand;
+    }
+
+    // 按下开按钮
+    public void onButtonPushed(int index) {
+        // 找到你按下的开的按钮， 并调用对应方法
+        onCommands[index].execute();
+        // 记录这次的操作，用于撤销
+        undoCommand = onCommands[index];
+    }
+
+    // 按下开按钮
+    public void offButtonPushed(int index) {
+        // 找到你按下的关的按钮， 并调用对应方法
+        offCommands[index].execute();
+        // 记录这次的操作，用于撤销
+        undoCommand = offCommands[index];
+
+    }
+
+    // 按下撤销按钮
+    public void undoButtonPushed() {
+        undoCommand.undo();
+    }
+
+}
+```
+- 测试类
+```java
+public class Command01Test {
+    public static void main(String[] args) {
+        RemoteController remoteController = new RemoteController();
+        LightReceiver lightReceiver = new LightReceiver();
+        TVReceiver tvReceiver = new TVReceiver();
+        remoteController.setCommand(0, new LightOnCommand(lightReceiver), new LightOffCommand(lightReceiver));
+        remoteController.setCommand(1, new TVOnCommand(tvReceiver), new TVOffCommand(tvReceiver));
+
+        remoteController.onButtonPushed(0);
+        remoteController.onButtonPushed(1);
+
+        remoteController.offButtonPushed(0);
+        remoteController.undoButtonPushed();
+
+        /**
+         *  电灯打开了..
+         *  电视机打开了..
+         *  电灯关闭了..
+         *  电灯打开了..
+         */
+
+    }
+}
+```
+
+###### 总结
+- 优点
+  + 降低系统的耦合度。由于请求者与接收者之间不存在直接引用，因此请求者与接收者之间实现完全解耦，相同的请求者可以对应不同的接收者，同样，相同的接收者也可以供不同的请求者使用，两者之间具有良好的独立性
+  + 容易设计一个命令队列。只要把命令对象放到列队，就可以多线程的执行命令
+  + 容易实现对请求的撤销和重做
+
+- 缺点
+  + 可能导致某些系统有过多的具体命令类，增加了系统的复杂度，这点在在使用的时候要注意
+
+- 适用场景
+  + 系统需要支持命令的撤销(Undo)操作和恢复(Redo)操作
+  + 系统需要将请求调用者和请求接收者解耦，使得调用者和接收者不直接交互
+  + 系统需要将一组操作组合在一起，即支持宏命令
+  + 系统需要在不同的时间指定请求、将请求排队和执行请求
+
+#### 访问者模式
+> 访问者模式(Visitor Pattern):提供一个作用于某对象结构中的各元素的操作表示，它使我们可以在不改变各元素的类的前提下定义作用于这些元素的新操作。访问者模式是一种对象行为型模式。
