@@ -2726,3 +2726,185 @@ public class Command01Test {
 
 #### 访问者模式
 > 访问者模式(Visitor Pattern):提供一个作用于某对象结构中的各元素的操作表示，它使我们可以在不改变各元素的类的前提下定义作用于这些元素的新操作。访问者模式是一种对象行为型模式。
+
+###### 示例1
+以公司的账单查看为例。老板查看账单主要是为了查看收入和支出的总数，注会查看账单主要是看交税了没。账单是被访问者 ，老板和注会是访问者。账单有收入账单和支出账单，两者存在于账本中。
+
+- 账单接口
+
+```java
+public interface IBill {
+    void accept(IVisitor visitor);
+}
+```	
+- 抽象账单
+
+```java
+public abstract class AbstractBill implements IBill {
+
+    private String item;
+    private Double amount;
+
+    public AbstractBill(String item, Double amount) {
+        this.item = item;
+        this.amount = amount;
+    }
+
+    public String getItem() {
+        return item;
+    }
+
+    public void setItem(String item) {
+        this.item = item;
+    }
+
+    public Double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
+    }
+}
+```	
+- 收入账单
+
+```java
+public class IncomeBill extends AbstractBill {
+    public IncomeBill(String item, Double amount) {
+        super(item, amount);
+    }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitorIncomeBill(this);
+    }
+}
+```	
+- 支出账单
+
+```java
+public class ConsumeBill extends AbstractBill {
+
+    public ConsumeBill(String item, Double amount) {
+        super(item, amount);
+    }
+
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visitorConsumeBill(this);
+    }
+}
+```	
+- 访问者接口
+
+```java
+public interface IVisitor {
+
+    void visitorConsumeBill(ConsumeBill bill);
+
+    void visitorIncomeBill(IncomeBill bill);
+}
+```	
+- 老板
+
+```java
+public class BossVisitor implements IVisitor {
+
+    private double totalIncome;
+
+    private double totalConsume;
+
+    @Override
+    public void visitorConsumeBill(ConsumeBill bill) {
+        totalConsume += bill.getAmount();
+    }
+
+    @Override
+    public void visitorIncomeBill(IncomeBill bill) {
+        totalIncome += bill.getAmount();
+    }
+
+    public void getInfo() {
+        System.out.println(String.format("老板只关心总数，总收入:%f,总支出：%f", totalIncome, totalConsume));
+    }
+}
+```	
+- 注会
+
+```java
+public class CPAVisitor implements IVisitor {
+    @Override
+    public void visitorConsumeBill(ConsumeBill bill) {
+        if (bill.getItem().equals("工资")) {
+            System.out.println("注会查看账本时，如果单子的消费目的是发工资，则注会会查看有没有交个人所得税。");
+        }
+    }
+
+    @Override
+    public void visitorIncomeBill(IncomeBill bill) {
+        System.out.println("注会查看账本时，只要是收入，注会都要查看公司交税了没。");
+    }
+}	
+```	
+- 账本
+
+```java
+public class AccountBook {
+    private List<IBill> billList = new ArrayList<IBill>();
+    //添加单子
+    public void addBill(IBill bill){
+        billList.add(bill);
+    }
+    //供账本的查看者查看账本
+    public void show(IVisitor visitor){
+        for (IBill bill : billList) {
+            bill.accept(visitor);
+        }
+    }
+}
+```	
+- 测试类
+
+```java
+public class Visitor01Test {
+    public static void main(String[] args) {
+        AccountBook accountBook = new AccountBook();
+        accountBook.addBill(new ConsumeBill("工资", 1000D));
+        accountBook.addBill(new ConsumeBill("广告", 2000D));
+
+        accountBook.addBill(new IncomeBill("销售额", 3000D));
+        accountBook.addBill(new IncomeBill("卖广告位", 4000D));
+
+        BossVisitor bossVisitor = new BossVisitor();
+        CPAVisitor cpaVisitor = new CPAVisitor();
+
+        accountBook.show(bossVisitor);
+        bossVisitor.getInfo();
+        accountBook.show(cpaVisitor);
+
+        /**
+         * 老板只关心总数，总收入:7000.000000,总支出：3000.000000
+         * 注会查看账本时，如果单子的消费目的是发工资，则注会会查看有没有交个人所得税。
+         * 注会查看账本时，只要是收入，注会都要查看公司交税了没。
+         * 注会查看账本时，只要是收入，注会都要查看公司交税了没。
+         */
+    }
+}
+
+```	
+
+###### 总结
+- 优点
+  + 增加新的访问操作很方便。使用访问者模式，增加新的访问操作就意味着增加一个新的具体访问者类，实现简单，无须修改源代码，符合“开闭原则”
+  + 访问者模式符合单一职责原则、让程序具有优秀的扩展性、灵活性非常高
+
+- 缺点
+
+  + 增加新的元素类很困难。在访问者模式中，每增加一个新的元素类都意味着要在抽象访问者角色中增加一个新的抽象操作，并在每一个具体访问者类中增加相应的具体操作，这违背了“开闭原则”的要求
+  + 破坏封装。访问者模式要求访问者对象访问并调用每一个元素对象的操作，这意味着元素对象有时候必须暴露一些自己的内部操作和内部状态，否则无法供访问者访问
+
+- 适用场景
+
+  + 如果一个系统有比较稳定的数据结构，又有经常变化的功能需求
+  + 一个对象结构包含多个类型的对象，希望对这些对象实施一些依赖其具体类型的操作。在访问者中针对每一种具体的类型都提供了一个访问操作，不同类型的对象可以有不同的访问操作
