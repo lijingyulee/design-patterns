@@ -3252,3 +3252,142 @@ public class Observer01Test {
   * 一个对象的改变将导致一个或多个其他对象也发生改变
   * 当一个对象必须通知其它对象， 而它又不能假定其它对象是谁
   * 当一个抽象模型有两个方面,其中一个方面依赖于另一方面。将这二者封装在独立的对象中以使它们可以各自独立地改变和复用
+
+#### 中介者模式
+> 中介者模式(Mediator Pattern)：用一个中介对象（中介者）来封装一系列的对象交互，中介者使各对象不需要显式地相互引用，从而使其耦合松散，而且可以独立地改变它们之间的交互。中介者模式又称为调停者模式
+>  如果一个对象中对象之间的联系呈现为网状结构，对象之间存在大量多对多的关系，将导致关系极其复杂，这些对象被称为“同事对象”.此时我们可以引入一个中介者对象，使各个同事对象只跟中介者对象打交道，将复杂的网络结构化解为星形结构
+
+###### 示例1
+以项目开发为例。前端搭建好页面后，需要对接后台接口，后台接口完成后需要告诉前端，如果我们有很多个前端，很多个后台，这样前端和后台就存在多对多的关系，如果直接以聚合方式耦合在内部，系统将会非常难维护，此时我们引进了项目经理充当中介者，项目经理熟悉所有的前端及后台，知道功能模块对应的前端及后台开发人员
+
+- 同事接口
+
+```java
+public interface IColleague {
+    /**
+     * 本职工作
+     */
+    void job();
+
+    /**
+     * 向中介者发信息
+     */
+    void send(String msg);
+}
+```
+- 前端A
+
+```java
+public class ColleagueA implements IColleague {
+
+    private IMediator mediator;
+
+    public ColleagueA(IMediator mediator) {
+        this.mediator = mediator;
+        mediator.register("A", this);
+    }
+
+    @Override
+    public void job() {
+        System.out.println("我是前端小明, 我来对接登录接口");
+    }
+
+    @Override
+    public void send(String msg) {
+        mediator.command(msg, "B");
+    }
+}
+```
+- 后台B
+
+```java
+public class ColleagueB implements IColleague {
+
+    private IMediator mediator;
+
+    public ColleagueB(IMediator mediator) {
+        this.mediator = mediator;
+        mediator.register("B", this);
+    }
+
+    @Override
+    public void job() {
+        System.out.println("我是后台小龙，我来做登录的后台接口");
+    }
+
+    @Override
+    public void send(String msg) {
+        mediator.command(msg, "A");
+    }
+}
+```
+- 中介者接口
+
+```java
+public interface IMediator {
+    void register(String name, IColleague colleague);
+
+    void command(String msg, String name);
+}
+```
+- 具体中介者(项目经理)
+
+```java
+public class PMMediator implements IMediator {
+
+    Map<String, IColleague> colleagueMap;
+
+    public PMMediator() {
+        colleagueMap = new HashMap<>();
+    }
+
+    @Override
+    public void register(String name, IColleague colleague) {
+        colleagueMap.put(name, colleague);
+    }
+
+    @Override
+    public void command(String msg, String name) {
+        System.out.println(msg);
+        IColleague colleague = colleagueMap.get(name);
+        colleague.job();
+    }
+
+}
+```
+- 测试类
+
+```java
+public class Mediator01Test {
+    public static void main(String[] args) {
+        PMMediator pmMediator = new PMMediator();
+        ColleagueA colleagueA = new ColleagueA(pmMediator);
+        ColleagueB colleagueB = new ColleagueB(pmMediator);
+        colleagueA.send("登录页面已完成");
+        colleagueB.send("后台接口已完成");
+
+        /**
+         * 登录页面已完成
+         * 我是后台小龙，我来做登录的后台接口
+         * 后台接口已完成
+         * 我是前端小明, 我来对接登录接口
+         */
+
+    }
+}
+```
+
+###### 总结
+- 优点
+  * 中介者模式简化了对象之间的交互，它用中介者和同事的一对多交互代替了原来同事之间的多对多交互，一对多关系更容易理解、维护和扩展
+  * 同事之间解耦，增加新的同事和中介者较为方便
+
+- 缺点
+
+  * 中介者 承担了较多的责任，一旦中介者出现了问题，整个系统就会受到影响
+  * 中介者可能会过于复杂
+
+- 适用场景
+
+  * 系统中对象之间存在复杂的引用关系，系统结构混乱且难以理解
+  * 通过一个中间类封装多个类中的行为
