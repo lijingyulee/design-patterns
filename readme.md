@@ -2736,7 +2736,7 @@ public class Command01Test {
 public interface IBill {
     void accept(IVisitor visitor);
 }
-```	
+```
 - 抽象账单
 
 ```java
@@ -2766,7 +2766,7 @@ public abstract class AbstractBill implements IBill {
         this.amount = amount;
     }
 }
-```	
+```
 - 收入账单
 
 ```java
@@ -2780,7 +2780,7 @@ public class IncomeBill extends AbstractBill {
         visitor.visitorIncomeBill(this);
     }
 }
-```	
+```
 - 支出账单
 
 ```java
@@ -2795,7 +2795,7 @@ public class ConsumeBill extends AbstractBill {
         visitor.visitorConsumeBill(this);
     }
 }
-```	
+```
 - 访问者接口
 
 ```java
@@ -2805,7 +2805,7 @@ public interface IVisitor {
 
     void visitorIncomeBill(IncomeBill bill);
 }
-```	
+```
 - 老板
 
 ```java
@@ -2829,7 +2829,7 @@ public class BossVisitor implements IVisitor {
         System.out.println(String.format("老板只关心总数，总收入:%f,总支出：%f", totalIncome, totalConsume));
     }
 }
-```	
+```
 - 注会
 
 ```java
@@ -2846,7 +2846,7 @@ public class CPAVisitor implements IVisitor {
         System.out.println("注会查看账本时，只要是收入，注会都要查看公司交税了没。");
     }
 }	
-```	
+```
 - 账本
 
 ```java
@@ -2863,7 +2863,7 @@ public class AccountBook {
         }
     }
 }
-```	
+```
 - 测试类
 
 ```java
@@ -2892,7 +2892,7 @@ public class Visitor01Test {
     }
 }
 
-```	
+```
 
 ###### 总结
 - 优点
@@ -2908,3 +2908,228 @@ public class Visitor01Test {
 
   + 如果一个系统有比较稳定的数据结构，又有经常变化的功能需求
   + 一个对象结构包含多个类型的对象，希望对这些对象实施一些依赖其具体类型的操作。在访问者中针对每一种具体的类型都提供了一个访问操作，不同类型的对象可以有不同的访问操作
+
+#### 迭代器模式
+> 迭代器模式(Iterator Pattern)：提供一种方法来访问聚合对象，而不用暴露这个对象的内部表示，其别名为游标(Cursor)。迭代器模式是一种对象行为型模式
+
+###### 示例1
+以学院及部门为例。学院有计算机学院和信息工程学院，而两者的内部存储方式并不同，一个是用数组存储部门，一个是List存储部门，这是如果想要获取不同学院的部门，传统模式将存储和遍历放在一起，导致类职责过重，违反“单一职责原则”。将学院抽象出接口，导致接口中方法过多，违反了“接口隔离原则”
+
+- 部门
+
+```java
+public class Department {
+    private String name;
+
+    public Department(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+
+```
+- 学院接口
+
+```java
+public interface ICollege {
+
+    String getName();
+
+    void addDepartment(String name);
+
+    Iterator createIterator();
+}
+
+```
+- 计算机学院
+
+```java
+public class ComputerCollege implements ICollege {
+
+    Department[] departments = new Department[2];
+    int totalOfDepartment = 0 ;
+
+    @Override
+    public String getName() {
+        return "计算机学院";
+    }
+
+    @Override
+    public void addDepartment(String name) {
+        Department department = new Department(name);
+        departments[totalOfDepartment++] = department;
+    }
+
+    @Override
+    public Iterator createIterator() {
+        return new ComputerCollegeIterator(departments);
+    }
+}
+
+```
+- 信息工程学院
+
+```java
+public class InfoCollege implements ICollege {
+
+    List<Department> departmentList = new ArrayList<>(2);
+
+    @Override
+    public String getName() {
+        return "信息工程学院";
+    }
+
+    @Override
+    public void addDepartment(String name) {
+        departmentList.add(new Department(name));
+    }
+
+    @Override
+    public Iterator createIterator() {
+        return new InfoColleageIterator(departmentList);
+    }
+}
+
+```
+- 计算机Iterator
+
+```java
+public class ComputerCollegeIterator implements Iterator {
+
+    Department[] departments;
+    int index = 0;
+
+    public ComputerCollegeIterator(Department[] departments) {
+        this.departments = departments;
+    }
+
+    @Override
+    public boolean hasNext() {
+        if (index >= departments.length || departments[index] == null) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public Object next() {
+        return departments[index++];
+    }
+}
+```
+- 信息工程Iterator
+
+```java
+public class InfoColleageIterator implements Iterator {
+
+    private List<Department> departmentList;
+    int index = -1;
+
+    public InfoColleageIterator(List<Department> departmentList) {
+        this.departmentList = departmentList;
+    }
+
+    @Override
+    public boolean hasNext() {
+        if(index++ >= departmentList.size() - 1) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public Object next() {
+        return departmentList.get(index);
+    }
+}
+
+```
+- 获取信息类
+
+```java
+public class CollegeInfo {
+    private List<ICollege> collegeList;
+
+    public CollegeInfo(List<ICollege> collegeList) {
+        this.collegeList = collegeList;
+    }
+
+    public void getCollegeInfo() {
+        Iterator<ICollege> iterator = collegeList.iterator();
+        ICollege college;
+        while (iterator.hasNext()) {
+            college = iterator.next();
+            System.out.println("--- " + college.getName() + " ---");
+            // 打印学院下面的department
+            getDepartInfo(college.createIterator());
+        }
+    }
+
+    private void getDepartInfo(Iterator iterator) {
+        Department department;
+        while (iterator.hasNext()) {
+            department = (Department) iterator.next();
+            System.out.println(department.getName());;
+        }
+    }
+
+}
+
+```
+- 测试类
+
+```java
+public class Iterator01Test {
+    public static void main(String[] args) {
+        ArrayList<ICollege> colleges = new ArrayList<>(2);
+
+        ComputerCollege computerCollege = new ComputerCollege();
+        computerCollege.addDepartment("软件工程");
+        computerCollege.addDepartment("大数据");
+
+        InfoCollege infoCollege = new InfoCollege();
+        infoCollege.addDepartment("信息安全");
+        infoCollege.addDepartment("网络安全");
+
+        colleges.add(computerCollege);
+        colleges.add(infoCollege);
+
+        CollegeInfo collegeInfo = new CollegeInfo(colleges);
+        collegeInfo.getCollegeInfo();
+
+        /**
+         * --- 计算机学院 ---
+         * 软件工程
+         * 大数据
+         * --- 信息工程学院 ---
+         * 信息安全
+         * 网络安全
+         */
+
+    }
+}
+
+```
+
+###### 总结
+- 优点
+  * 提供一个统一的方法遍历对象，客户不用再考虑聚合的类型，使用一种方法就可以遍历对象了
+  * 隐藏了聚合的内部结构，客户端要遍历聚合的时候只能取到迭代器，而不会知道聚合的具体组成
+  * 迭代器简化了聚合类。由于引入了迭代器，在原有的聚合对象中不需要再自行提供数据遍历等方法，这样可以简化聚合类的设计
+  *  在迭代器模式中，由于引入了抽象层，增加新的聚合类和迭代器类都很方便，无须修改原有代码，满足“开闭原则”的要求
+
+- 缺点
+
+  * 产生很多的迭代器类，不好维护
+
+- 适用场景
+  * 需要遍历一组相似对象或者相同对象时
+  * 需要隐藏对象的内部实现时
+  * 需要为一个对象提供多种遍历方式时
