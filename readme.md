@@ -3133,3 +3133,122 @@ public class Iterator01Test {
   * 需要遍历一组相似对象或者相同对象时
   * 需要隐藏对象的内部实现时
   * 需要为一个对象提供多种遍历方式时
+
+#### 观察者模式
+> 观察者模式(Observer Pattern)：定义对象之间的一种一对多依赖关系，使得每当一个对象状态发生改变时，其相关依赖对象皆得到通知并被自动更新。观察者模式的别名包括发布-订阅（Publish/Subscribe）模式、模型-视图（Model/View）模式、源-监听器（Source/Listener）模式或从属者（Dependents）模式
+> 典型应用：消息中间件，Spring事件监听
+
+###### 示例1
+以微信中公众号推送为例。比如我有一个公众号，每天发布文章，有很多网友是我的粉丝，订阅了我的公众号，我发布文章，他们就会接到推送。这里，公众号是被观察者(观察目标)，我的粉丝则是观察者，只要公众号发布文章，他们就会收到新的推送
+- 观察者接口
+
+```java
+public interface IObserver {
+    void update(String title);
+}
+```
+- 被观察者接口
+
+```java
+public interface ISubject {
+    void registerObserver(IObserver observer);
+    void removeObserver(IObserver observer);
+    void notifyObservers(String title);
+}
+```
+- 微信公众号(被观察者具体实现)
+
+```java
+public class WechatServer implements ISubject {
+
+    private List<IObserver> observerList;
+
+    public WechatServer() {
+        observerList = new ArrayList<>();
+    }
+
+    @Override
+    public void registerObserver(IObserver observer) {
+        observerList.add(observer);
+    }
+
+    @Override
+    public void removeObserver(IObserver observer) {
+        observerList.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers(String title) {
+        observerList.forEach(observer -> observer.update(title));
+    }
+
+    public void publish(String title) {
+        System.out.println("公众号发布了《" + title + "》");
+        notifyObservers(title);
+    }
+}
+```
+- 观察者小明
+
+```java
+public class XiaoMing implements IObserver {
+    @Override
+    public void update(String title) {
+        System.out.println("小明收到了公众号发布的文章《" + title + "》");
+    }
+}
+```
+- 观察者小龙
+
+```java
+public class XiaoLong implements IObserver {
+    @Override
+    public void update(String title) {
+        System.out.println("小龙收到了公众号发布的文章《" + title + "》");
+    }
+}
+```
+- 测试类
+
+```java
+public class Observer01Test {
+    public static void main(String[] args) {
+        XiaoMing xiaoMing = new XiaoMing();
+        XiaoLong xiaoLong = new XiaoLong();
+
+        WechatServer wechatServer = new WechatServer();
+        wechatServer.registerObserver(xiaoMing);
+        wechatServer.registerObserver(xiaoLong);
+        wechatServer.publish("北京初雪20191129");
+
+        wechatServer.removeObserver(xiaoMing);
+        wechatServer.publish("忽如一夜春风来，千树万树梨花开");
+
+        /**
+         * 公众号发布了《北京初雪20191129》
+         * 小明收到了公众号发布的文章《北京初雪20191129》
+         * 小龙收到了公众号发布的文章《北京初雪20191129》
+         * 公众号发布了《忽如一夜春风来，千树万树梨花开》
+         * 小龙收到了公众号发布的文章《忽如一夜春风来，千树万树梨花开》
+         */
+
+    }
+}
+```
+
+###### 总结
+- 优点
+  * 采用观察者模式，以集合方式管理观察者
+  * 观察者模式满足“开闭原则”的要求，增加新的具体观察者无须修改原有系统代码
+  * 观察者模式支持广播通信，观察目标会向所有已注册的观察者对象发送通知，简化了一对多系统设计的难度
+
+- 缺点
+
+  * 观察者太多，导致系统缓慢
+  * 被观察者与观察者循环依赖，可能导致系统崩溃
+
+- 适用场景
+
+  * 一个对象的改变将导致一个或多个其他对象也发生改变
+  * 当一个对象必须通知其它对象， 而它又不能假定其它对象是谁
+  * 当一个抽象模型有两个方面,其中一个方面依赖于另一方面。将这二者封装在独立的对象中以使它们可以各自独立地改变和复用
