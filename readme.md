@@ -467,7 +467,8 @@ public class Demo1Test {
 
 ###### 示例1
 - 单例对象：
-```javapublic class Singleton01 {
+```java
+public class Singleton01 {
     private Singleton01() {}
 
     private final static Singleton01 instance = new Singleton01();
@@ -698,7 +699,7 @@ public class Type08Test {
 - 借助 JDK1.5 中添加的枚举来实现单例模式。不仅能避免多线程同步问题，而且还能防止反序列化重新创建新的对象
 - 这种方式是 Effective Java  作者 Josh Bloch  提倡的方式。 推荐使用 
 
-#### 原型模式
+## 原型模式
 
 原型模式(Prototype  Pattern)：使用原型实例指定创建对象的种类，并且通过拷贝这些原型创建新的对象。原型模式是一种对象创建型模式。
 需要注意的是通过克隆方法所创建的对象是全新的对象，它们在内存中拥有新的地址，通常对克隆所产生的对象进行修改对原型对象不会造成任何影响，每一个克隆对象都是相互独立的。通过不同的方式修改可以得到一系列相似但不完全相同的对象。
@@ -3391,3 +3392,168 @@ public class Mediator01Test {
 
   * 系统中对象之间存在复杂的引用关系，系统结构混乱且难以理解
   * 通过一个中间类封装多个类中的行为
+
+#### 备忘录模式
+> 备忘录模式(Memento Pattern)：在不破坏封装的前提下，捕获一个对象的内部状态，并在该对象之外保存这个状态，这样可以在以后将对象恢复到原先保存的状态。它是一种对象行为型模式，其别名为Token。
+>  Originator（原发器）：它是一个普通类，可以创建一个备忘录，并存储它的当前内部状态，也可以使用备忘录来恢复其内部状态，一般将需要保存内部状态的类设计为原发器。
+  Memento（备忘录)：存储原发器的内部状态，根据原发器来决定保存哪些内部状态。备忘录的设计一般可以参考原发器的设计，根据实际需要确定备忘录类中的属性。需要注意的是，除了原发器本身与负责人类之外，备忘录对象不能直接供其他类使用，原发器的设计在不同的编程语言中实现机制会有所不同。
+  Caretaker（负责人）：负责人又称为管理者，它负责保存备忘录，但是不能对备忘录的内容进行操作或检查。在负责人类中可以存储一个或多个备忘录对象，它只负责存储对象，而不能修改对象，也无须知道对象的实现细节
+
+###### 示例1
+以象棋中的悔棋为例说明。象棋走一步，将位置信息存储在memento中，可以悔一步棋
+- 象棋类(Originator原发器)
+
+```java
+public class Chessman {
+    private String label;
+    private Integer x;
+    private Integer y;
+
+    public Chessman(String label, Integer x, Integer y) {
+        this.label = label;
+        this.x = x;
+        this.y = y;
+    }
+
+    public ChessmanMemento getMemento() {
+        return new ChessmanMemento(this.label,this.x,this.y);
+    }
+
+    public void restoreMemento(ChessmanMemento memento) {
+        this.label = memento.getLabel();
+        this.x = memento.getX();
+        this.y = memento.getY();
+    }
+
+    @Override
+    public String toString() {
+        return "Chessman{" +
+                "label='" + label + '\'' +
+                ", x=" + x +
+                ", y=" + y +
+                '}';
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public Integer getX() {
+        return x;
+    }
+
+    public void setX(Integer x) {
+        this.x = x;
+    }
+
+    public Integer getY() {
+        return y;
+    }
+
+    public void setY(Integer y) {
+        this.y = y;
+    }
+}
+```
+- 备忘录(Memento)
+
+```java
+public class ChessmanMemento {
+    private String label;
+    private Integer x;
+    private Integer y;
+
+    public ChessmanMemento(String label, Integer x, Integer y) {
+        this.label = label;
+        this.x = x;
+        this.y = y;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public Integer getX() {
+        return x;
+    }
+
+    public void setX(Integer x) {
+        this.x = x;
+    }
+
+    public Integer getY() {
+        return y;
+    }
+
+    public void setY(Integer y) {
+        this.y = y;
+    }
+}
+
+```
+- 负责管理类(Caretaker)
+
+```java
+public class MementoCaretaker {
+    private ChessmanMemento memento;
+
+    public ChessmanMemento getMemento() {
+        return memento;
+    }
+
+    public void setMemento(ChessmanMemento memento) {
+        this.memento = memento;
+    }
+}
+```
+- 测试类
+
+```java
+public class Memento01Test {
+    public static void main(String[] args) {
+        Chessman chessman = new Chessman("车", 5, 6);
+        System.out.println("chessman = " + chessman);
+        ChessmanMemento memento = chessman.getMemento();
+        MementoCaretaker mementoCaretaker = new MementoCaretaker();
+        mementoCaretaker.setMemento(memento);
+
+        chessman.setX(6);
+        chessman.setY(8);
+        System.out.println("chessman = " + chessman);
+
+        chessman.restoreMemento(mementoCaretaker.getMemento());
+        System.out.println("chessman = " + chessman);
+
+        /**
+         * chessman = Chessman{label='车', x=5, y=6}
+         * chessman = Chessman{label='车', x=6, y=8}
+         * chessman = Chessman{label='车', x=5, y=6}
+         */
+
+
+    }
+}
+```
+上述例子只能恢复一步，如果需要恢复多步，可以采用列表在管理类中管理状态。
+###### 总结
+- 优点
+  * 给用户提供了一种可以恢复状态的机制，可以使用户能够比较方便地回到某个历史的状态
+  * 实现了信息的封装，使得用户不需要关心状态的保存细节
+- 缺点
+  * 如果类的成员变量过多，势必会占用比较大的资源，而且每一次保存都会消耗一定的内存
+- 适用场景
+  * 保存一个对象在某一个时刻的全部状态或部分状态，这样以后需要时它能够恢复到先前的状态，实现撤销操作
+
+- 应用
+  * ctrl+z
+  * 游戏存档
+  * 浏览器后退
+  * 数据库事务管理里
