@@ -3724,3 +3724,97 @@ public class Demo01Test {
 - 适用场景
   * 有多个对象可以处理同一个请求，具体哪个对象处理该请求待运行时刻再确定，客户端只需将请求提交到链上，而无须关心请求的处理对象是谁以及它是如何处理的
   * 可动态指定一组对象处理请求，客户端可以动态创建职责链来处理请求，还可以改变链中处理者之间的先后次序
+
+#### 状态模式
+> 状态模式(State Pattern)：允许一个对象在其内部状态改变时改变它的行为，对象看起来似乎修改了它的类。其别名为状态对象(Objects for States)，状态模式是一种对象行为型模式
+
+###### 示例1
+以红绿灯为例说明。红绿灯有三种状态，红黄绿，每种状态灯的显示颜色是不同的，处理方式是不同的
+
+- 状态接口
+
+```java
+public interface IState {
+    void handle();
+}
+```
+
+- 红灯状态
+
+```java
+public class RedState implements IState {
+    @Override
+    public void handle() {
+        System.out.println("红灯状态...");
+    }
+}
+```
+
+- 黄灯状态
+
+```java
+public class Yellow implements IState {
+    @Override
+    public void handle() {
+        System.out.println("黄灯状态...");
+    }
+}
+```
+
+- 绿灯状态
+
+```java
+public class GreenState implements IState {
+    @Override
+    public void handle() {
+        System.out.println("绿灯状态...");
+    }
+}
+```
+
+- 红绿灯管理类
+
+```java
+public class TrafficLightContext {
+    private IState state;
+
+    public void setState(IState state) {
+        this.state = state;
+    }
+
+    public void handle() {
+        this.state.handle();
+    }
+}
+```
+
+- 测试类
+
+```java
+public class State01Test {
+    public static void main(String[] args) {
+        TrafficLightContext trafficLightContext = new TrafficLightContext();
+        trafficLightContext.setState(new RedState());
+        trafficLightContext.handle();
+
+        trafficLightContext.setState(new GreenState());
+        trafficLightContext.handle();
+
+        /**
+         * 红灯状态...
+         * 绿灯状态...
+         */
+    }
+}
+```
+
+###### 总结
+- 优点
+  *  封装了状态的转换规则，在状态模式中可以将状态的转换代码封装在环境类或者具体状态类中，可以对状态转换代码进行集中管理，而不是分散在一个个业务方法中
+  * 方便维护。将容易产生问题的 if-else 语句删除了，如果把每个状态的行为都放到一个类中，每次调用方法时都要判断当前是什么状态，不但会产出很多 if-else 语句，而且容易出错
+- 缺点
+  * 会有很多状态类
+  * 系统设计难度大
+- 适用场景
+  * 当一个事件或者对象有很多种状态，状态之间会相互转换，对不同的状态要求有不同的行为的时
+  * 代码里有很多与状态有关的条件语句时，可考虑用状态模式重构
