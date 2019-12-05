@@ -3557,3 +3557,170 @@ public class Memento01Test {
   * 游戏存档
   * 浏览器后退
   * 数据库事务管理里
+
+#### 职责链模式
+> 职责链模式(Chain of Responsibility  Pattern)：避免请求发送者与接收者耦合在一起，让多个对象都有可能接收请求，将这些对象连接成一条链，并且沿着这条链传递请求，直到有对象处理它为止
+
+###### 示例1
+以学校的采购审批为例说明：花费在5000以下时有教学主任处理，5000到10000时由院长处理，大于10000时由校长审批
+
+- 请求
+
+```java
+public class PurchaseRequest {
+    /** 采购编号 */
+    private Integer id;
+    /** 采购目的 */
+    private String purpose;
+    /** 采购金额 */
+    private Double amount;
+
+    public PurchaseRequest(Integer id, String purpose, Double amount) {
+        this.id = id;
+        this.purpose = purpose;
+        this.amount = amount;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getPurpose() {
+        return purpose;
+    }
+
+    public void setPurpose(String purpose) {
+        this.purpose = purpose;
+    }
+
+    public Double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
+    }
+}
+```
+- - 抽象审批
+
+```java
+public abstract class Approver {
+    /** 下一个处理者 */
+    Approver approver;
+    /** 名字 */
+    String name;
+
+    public Approver(String name) {
+        this.name = name;
+    }
+
+    /**
+     * 设置下一个审批者
+     * @param approver
+     */
+    public void setApprover(Approver approver) {
+        this.approver = approver;
+    }
+
+    /**
+     * 具体处理由子类完成
+     * @param purchaseRequest
+     */
+    protected abstract void processRequest(PurchaseRequest purchaseRequest);
+}
+
+```
+- 教学主任
+
+```java
+public class DepartmentApprover extends Approver {
+    public DepartmentApprover(String name) {
+        super(name);
+    }
+
+    @Override
+    protected void processRequest(PurchaseRequest purchaseRequest) {
+        if (purchaseRequest.getAmount() <= 5000) {
+            System.out.println(" 采购项目 " + purchaseRequest.getPurpose() + " 被 " + this.name + " 处理");
+        } else {
+            approver.processRequest(purchaseRequest);
+        }
+    }
+}
+```
+- 院长
+
+```java
+public class CollegeApprover extends Approver {
+
+    public CollegeApprover(String name) {
+        super(name);
+    }
+
+    @Override
+    protected void processRequest(PurchaseRequest purchaseRequest) {
+        if (purchaseRequest.getAmount() > 5000
+                && purchaseRequest.getAmount() <= 10000) {
+            System.out.println(" 采购项目 " + purchaseRequest.getPurpose() + " 被 " + this.name + " 处理");
+        } else {
+            approver.processRequest(purchaseRequest);
+        }
+    }
+}
+```
+- 校长
+
+```java
+public class SchoolMasterApprover extends Approver {
+    public SchoolMasterApprover(String name) {
+        super(name);
+    }
+
+    @Override
+    protected void processRequest(PurchaseRequest purchaseRequest) {
+        if (purchaseRequest.getAmount() > 10000) {
+            System.out.println(" 采购项目 " + purchaseRequest.getPurpose() + " 被 " + this.name + " 处理");
+        } else {
+            approver.processRequest(purchaseRequest);
+        }
+    }
+}
+```
+- 测试类
+
+```java
+public class Demo01Test {
+    public static void main(String[] args) {
+        PurchaseRequest purchaseRequest = new PurchaseRequest(1, "采购电脑", 15000.0);
+
+        DepartmentApprover departmentApprover = new DepartmentApprover("教学主任");
+        CollegeApprover collegeApprover = new CollegeApprover("学院院长");
+        SchoolMasterApprover schoolMasterApprover = new SchoolMasterApprover("校长");
+
+        departmentApprover.setApprover(collegeApprover);
+        collegeApprover.setApprover(schoolMasterApprover);
+        schoolMasterApprover.setApprover(departmentApprover);
+
+        departmentApprover.processRequest(purchaseRequest);
+
+        /**
+         * 采购项目 采购电脑 被 校长 处理
+         */
+    }
+}
+```
+###### 总结
+- 优点
+  * 将请求和处理分开，实现解耦，提高系统的灵活性
+  * 请求处理对象仅需维持一个指向其后继者的引用，而不需要维持它对所有的候选处理者的引用，可简化对象的相互连接
+- 缺点
+  * 对于比较长的职责链，请求的处理可能涉及到多个处理对象，系统性能将受到一定影响，而且在进行代码调试时不太方便
+  * 由于一个请求没有明确的接收者，那么就不能保证它一定会被处理，该请求可能一直到链的末端都得不到处理；一个请求也可能因职责链没有被正确配置而得不到处理
+- 适用场景
+  * 有多个对象可以处理同一个请求，具体哪个对象处理该请求待运行时刻再确定，客户端只需将请求提交到链上，而无须关心请求的处理对象是谁以及它是如何处理的
+  * 可动态指定一组对象处理请求，客户端可以动态创建职责链来处理请求，还可以改变链中处理者之间的先后次序
