@@ -3818,3 +3818,96 @@ public class State01Test {
 - 适用场景
   * 当一个事件或者对象有很多种状态，状态之间会相互转换，对不同的状态要求有不同的行为的时
   * 代码里有很多与状态有关的条件语句时，可考虑用状态模式重构
+
+#### 解释器模式
+> 解释器模式(Interpreter Pattern)：定义一个语言的文法，并且建立一个解释器来解释该语言中的句子，这里的“语言”是指使用规定格式和语法的代码。解释器模式是一种类行为型模式
+
+###### 示例1
+- Context;包含解释器之外的一些全局信息
+```java
+public class Context {
+    private String before;
+    private String after;
+
+    public String getBefore() {
+        return before;
+    }
+
+    public void setBefore(String before) {
+        this.before = before;
+    }
+
+    public String getAfter() {
+        return after;
+    }
+
+    public void setAfter(String after) {
+        this.after = after;
+    }
+}
+```
+- AbstractExpression:抽象解释器
+```java
+public abstract class AbstractExpression {
+    abstract void Interpret(Context context);
+}
+```
+
+- TerminalExpression: 为终结符表达式, 实现与文法中的终结符相关的解释操作
+```java
+public class TerminalExpression extends AbstractExpression {
+    @Override
+    void Interpret(Context context) {
+        String before = context.getBefore();
+        context.setAfter("被终端处理后：" + before);
+        System.out.println(context.getAfter());
+    }
+}
+```
+- NonTermialExpression: 为非终结符表达式，为文法中的非终结符实现解释操作
+```java
+public class NonterminalExpression extends AbstractExpression {
+    @Override
+    void Interpret(Context context) {
+        String before = context.getBefore();
+        context.setAfter("被非终端处理后：" + before);
+        System.out.println(context.getAfter());
+    }
+}
+```
+- 测试类
+```java
+public class Interpreter01Test {
+    public static void main(String[] args) {
+        Context context = new Context();
+        context.setBefore("test");
+
+        TerminalExpression terminalExpression = new TerminalExpression();
+        terminalExpression.Interpret(context);
+
+        NonterminalExpression nonterminalExpression = new NonterminalExpression();
+        nonterminalExpression.Interpret(context);
+
+        /**
+         * 被终端处理后：test
+         * 被非终端处理后：test
+         */
+
+    }
+}
+```
+
+###### 总结
+- 优点
+  * 当有一个语言需要解释执行，可将该语言中的句子表示为一个抽象语法树，就可以考虑使用解释器模式，让程序具有良好的扩展性
+  * 增加新的解释表达式较为方便
+- 缺点
+  * 对于复杂文法难以维护。在解释器模式中，每一条规则至少需要定义一个类，因此如果一个语言包含太多文法规则，类的个数将会急剧增加，导致系统难以管理和维护
+  * 执行效率低
+- 适用场景
+  * 可以将一个需要解释执行的语言中的句子表示为一个抽象语法树
+- 应用场景
+  * 编译器
+  * 运算表达式计算
+  * 正则表达式
+  * 机器人
