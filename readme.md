@@ -1,6 +1,12 @@
 # 设计模式
 
-博客地址： https://segmentfault.com/blog/lijingyulee 
+博客地址：
+
+ https://segmentfault.com/blog/lijingyulee 
+
+https://www.cnblogs.com/lijingyulee/category/1606838.html
+
+https://blog.csdn.net/u010992900/category_9546747.html
 
 ## 设计模式原则
 
